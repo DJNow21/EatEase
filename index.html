@@ -1,0 +1,1307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EatEase — Restaurant Discovery & Booking</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --accent:#00c2a8; --muted:#98a0ad; --glass: rgba(255,255,255,0.04);
+      --radius:14px; --fw-medium:600;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial; margin:0; background:linear-gradient(180deg,#071021 0%, #071a2d 60%); color:#e6eef6; -webkit-font-smoothing:antialiased}
+    header{display:flex;align-items:center;justify-content:space-between;padding:24px 36px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#2dd4bf);display:flex;align-items:center;justify-content:center;font-weight:700;color:#012;box-shadow:0 6px 18px rgba(0,0,0,0.5)}
+    h1{font-size:20px;margin:0}
+    .controls{display:flex;gap:12px;align-items:center}
+    .lang{background:var(--glass);padding:8px 10px;border-radius:12px;cursor:pointer}
+    main{display:grid;grid-template-columns:380px 1fr;gap:24px;padding:20px 36px}
+    .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); padding:18px;border-radius:var(--radius);min-height:520px}
+    .search{display:flex;gap:8px;margin-bottom:12px}
+    input.searchbar{flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    button.primary{background:var(--accent);border:none;color:#012;padding:10px 12px;border-radius:10px;font-weight:700;cursor:pointer}
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .chip{background:#071827;padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.03);font-size:13px;color:var(--muted);cursor:pointer}
+    .chip.active{background:var(--accent);color:#012;font-weight:600}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:12px;margin-bottom:12px;display:flex;gap:12px;align-items:center}
+    .thumb{width:72px;height:72px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#123 40%,#234);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
+    .thumb img{width:100%;height:100%;object-fit:cover}
+    .rname{font-size:16px;margin:0}
+    .meta{color:var(--muted);font-size:13px}
+    .badge{background:#02121b;padding:6px 8px;border-radius:10px;font-size:13px}
+    .wait{font-weight:700;color:var(--accent)}
+    .actions{display:flex;gap:8px;margin-left:auto}
+    .btn{padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;cursor:pointer}
+    .map{height:260px;border-radius:12px;background:linear-gradient(180deg,#052233,#022b3a);display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:12px}
+    .content{padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:var(--radius);min-height:520px}
+    .hero{display:flex;align-items:center;justify-content:space-between}
+    .hero .copy{max-width:60%}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.03);font-weight:600}
+    .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:16px}
+    .restcard{background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));padding:12px;border-radius:12px}
+    .stars{color:#ffd166;font-weight:700}
+    .reviews{font-size:13px;color:var(--muted);margin-top:8px}
+    footer{padding:18px 36px;color:var(--muted);font-size:13px}
+    /* modal */
+    .overlay{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;z-index:1000}
+    .modal{background:#071827;padding:18px;border-radius:12px;max-width:520px;width:94%;max-height:90vh;overflow-y:auto}
+    .row{display:flex;gap:8px;align-items:center}
+    .plan{background:linear-gradient(180deg,#062a29,#072b2b);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:all 0.2s ease}
+    .plan.selected{border:2px solid #00c2a8;background:linear-gradient(180deg,#083a38,#073b3a)}
+    .feature-tag{display:inline-block;padding:4px 8px;background:rgba(0,194,168,0.1);color:var(--accent);border-radius:6px;font-size:12px;margin-right:6px;margin-top:4px}
+    .review-item{padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;margin-bottom:8px}
+    .review-text{font-style:italic;margin:8px 0}
+    .review-meta{font-size:12px;color:var(--muted)}
+    .premium-feature{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;margin-bottom:8px}
+    .premium-icon{width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;color:#012;font-weight:700}
+    .countdown-timer{text-align:center;padding:20px;background:rgba(0,194,168,0.1);border-radius:10px;margin:16px 0}
+    .countdown-text{font-size:14px;color:var(--muted);margin-bottom:8px}
+    .countdown-time{font-size:32px;font-weight:700;color:var(--accent);font-family:monospace}
+    .booking-ready{text-align:center;padding:20px}
+    .ready-icon{font-size:48px;margin-bottom:16px}
+    .pulse{animation:pulse 2s infinite}
+    @keyframes pulse{0%{opacity:1}50%{opacity:0.5}100%{opacity:1}}
+    @media(max-width:900px){main{grid-template-columns:1fr;padding:12px} .sidebar{order:2} .content{order:1} .hero .copy{max-width:100%}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">EE</div>
+      <div>
+        <h1 id="headerTitle">EatEase — Restaurant Discovery & Booking</h1>
+        <div style="color:var(--muted);font-size:13px" id="headerSubtitle">All-in-one global restaurant discovery • Real-time queue tracking • Verified reviews</div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="lang" id="langToggle">EN</div>
+      <button class="primary" id="subscribeBtn">Go Premium</button>
+    </div>
+  </header>
+
+  <main>
+    <aside class="sidebar">
+      <div class="search">
+        <input class="searchbar" id="searchInput" placeholder="Search restaurants or cuisine (e.g. ramen, snails)" />
+        <button class="primary" id="searchBtn">Search</button>
+      </div>
+
+      <div class="map" id="mapArea">
+        <div>📍 <span id="mapText">Map preview</span></div>
+        <div style="font-size:12px;margin-top:8px" id="offlineText">Offline maps available</div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <div class="pill" id="liveQueueText">Live queue tracking</div>
+        <div style="color:var(--muted);font-size:13px" id="updatedText">Updated every 5s</div>
+      </div>
+
+      <div id="nearbyList"></div>
+
+      <div style="margin-top:12px;color:var(--muted);font-size:13px" id="filtersText">Quick filters</div>
+      <div class="filters">
+        <div class="chip active" data-filter="verified" id="filterVerified">Verified Reviews</div>
+        <div class="chip" data-filter="skipQueue" id="filterSkipQueue">Skip Queue</div>
+        <div class="chip" data-filter="premium" id="filterPremium">Guaranteed Booking</div>
+        <div class="chip" data-filter="multilingual" id="filterMultilingual">Multilingual Menu</div>
+        <div class="chip" data-filter="offline" id="filterOffline">Offline Maps</div>
+        <div class="chip" data-filter="group" id="filterGroup">Group Booking</div>
+      </div>
+    </aside>
+
+    <section class="content">
+      <div class="hero">
+        <div class="copy">
+          <div class="pill" id="trustedText">Trusted by International Travelers</div>
+          <h2 style="margin:8px 0 4px" id="heroTitle">Find & Book Restaurants Globally — No Language Barriers</h2>
+          <div style="color:var(--muted)" id="heroSubtitle">Real-time queue tracking • Verified multilingual reviews • Guaranteed reservations • Offline maps</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:var(--muted)" id="userTypeText">Simulated user</div>
+          <div style="font-weight:700;font-size:18px" id="userDetails">Traveler — 2 trips / year</div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="filterInput" placeholder="Filter by feature (e.g. skip queue)" style="flex:1;padding:10px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.03);color:inherit" />
+          <button class="btn" id="clearFilter">Clear</button>
+        </div>
+
+        <div class="results" id="resultsGrid"></div>
+      </div>
+
+      <div style="margin-top:14px">
+        <h3 style="margin:0 0 8px" id="detailsTitle">Restaurant Details</h3>
+        <div id="reviewsArea" class="reviews">Select a restaurant to see details and verified reviews.</div>
+      </div>
+
+    </section>
+  </main>
+
+  <footer id="footerText">Demo — All data is simulated for prototype. Based on real user validation with international travelers.</footer>
+
+  <!-- Booking Modal -->
+  <div class="overlay" id="bookingOverlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">Book Table</h3>
+      <p id="modalMeta" style="color:var(--muted)"></p>
+
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <div class="plan" style="flex:1">
+          <div style="font-weight:700" id="premiumPlanTitle">Premium Guarantee</div>
+          <div style="color:var(--muted);font-size:13px" id="premiumPlanDesc">Guaranteed seat • Skip queue • $4.99/month or $2.99 one-time</div>
+        </div>
+        <div class="plan" style="flex:1">
+          <div style="font-weight:700" id="standardPlanTitle">Standard Queue</div>
+          <div style="color:var(--muted);font-size:13px" id="standardPlanDesc">Join digital queue (free) • Real-time updates</div>
+        </div>
+      </div>
+
+      <!-- Group booking option -->
+      <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.02);border-radius:8px">
+        <label style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="groupBooking" />
+          <span id="groupBookingText">Group booking (6+ people) - notify restaurant in advance</span>
+        </label>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn" id="closeBookingModal">Cancel</button>
+        <button class="primary" id="confirmBooking">Confirm Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Countdown Modal -->
+  <div class="overlay" id="countdownOverlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="countdownTitle">Booking Confirmed!</h3>
+      <p id="countdownSubtitle" style="color:var(--muted)">Your table will be ready in:</p>
+      
+      <div class="countdown-timer">
+        <div class="countdown-text" id="countdownText">Estimated wait time</div>
+        <div class="countdown-time" id="countdownTime">05:00</div>
+      </div>
+
+      <div style="text-align:center;color:var(--muted);font-size:13px;margin-top:16px">
+        <div id="restaurantInfo">Restaurant information</div>
+        <div id="bookingDetails">Booking details</div>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:20px">
+        <button class="btn" id="cancelCountdown">Cancel Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking Ready Modal -->
+  <div class="overlay" id="readyOverlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="booking-ready">
+        <div class="ready-icon pulse">🎉</div>
+        <h3 id="readyTitle">Your Table is Ready!</h3>
+        <p id="readyMessage" style="color:var(--muted);margin:16px 0">Please proceed to the reception area. Your table is waiting for you!</p>
+        <div style="background:rgba(0,194,168,0.1);padding:12px;border-radius:8px;margin:16px 0">
+          <strong id="readyRestaurant">Restaurant Name</strong>
+          <div style="color:var(--muted);font-size:13px;margin-top:4px" id="readyTime">Ready now</div>
+        </div>
+        <button class="primary" id="closeReadyModal">Got it!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviews Modal -->
+  <div class="overlay" id="reviewsOverlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="reviewsModalTitle">Verified Reviews</h3>
+      <p id="reviewsModalMeta" style="color:var(--muted)"></p>
+      
+      <div id="reviewsContent" style="margin-top:16px">
+        <!-- Reviews will be populated here -->
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn" id="closeReviewsModal">Close</button>
+        <button class="primary" onclick="openBooking(selectedRestaurant.id, 'guarantee')">Book Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Premium Modal -->
+  <div class="overlay" id="premiumOverlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="premiumModalTitle">Go Premium</h3>
+      <p id="premiumModalSubtitle" style="color:var(--muted)">Unlock exclusive features for international travelers</p>
+
+      <div style="margin:20px 0">
+        <div class="premium-feature">
+          <div class="premium-icon">✓</div>
+          <div>
+            <div style="font-weight:700" id="feature1Title">Guaranteed Reservations</div>
+            <div style="color:var(--muted);font-size:13px" id="feature1Desc">Skip the queue with guaranteed bookings at popular restaurants</div>
+          </div>
+        </div>
+        <div class="premium-feature">
+          <div class="premium-icon">✓</div>
+          <div>
+            <div style="font-weight:700" id="feature2Title">Flexible Cancellation</div>
+            <div style="color:var(--muted);font-size:13px" id="feature2Desc">Cancel up to 1 hour before without penalty</div>
+          </div>
+        </div>
+        <div class="premium-feature">
+          <div class="premium-icon">✓</div>
+          <div>
+            <div style="font-weight:700" id="feature3Title">Members-only Restaurants</div>
+            <div style="color:var(--muted);font-size:13px" id="feature3Desc">Access to premium/hard-to-book establishments</div>
+          </div>
+        </div>
+        <div class="premium-feature">
+          <div class="premium-icon">✓</div>
+          <div>
+            <div style="font-weight:700" id="feature4Title">Shorter Wait Time</div>
+            <div style="color:var(--muted);font-size:13px" id="feature4Desc">Premium users get 1/3 of the normal wait time</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:rgba(0,194,168,0.1);padding:16px;border-radius:10px;margin:16px 0">
+        <div style="font-weight:700;text-align:center;font-size:24px" id="premiumPrice">$4.99<span style="font-size:14px;color:var(--muted)">/month</span></div>
+        <div style="text-align:center;color:var(--muted);font-size:13px" id="premiumAlternative">or $2.99 per guaranteed booking</div>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn" id="closePremiumModal">Cancel</button>
+        <button class="primary" id="confirmPremium">Subscribe Now</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Enhanced restaurant dataset with multilingual content and images
+    const restaurants = [
+      {
+        id:1,
+        name:"Luoyang Noodles",
+        cuisine:"Local Chinese",
+        rating:4.6,
+        sourceRatings:[4.7,4.5,4.6],
+        wait:18,
+        features:["verified","skipQueue","multilingual","offline"],
+        price:20,
+        image:"https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=150&h=150&fit=crop",
+        desc: {
+          en: "Beloved local noodle spot with translated menu and authentic flavors.",
+          es: "Lugar local de fideos favorito con menú traducido y sabores auténticos.",
+          ch: "备受喜爱的当地面馆，提供翻译菜单和正宗风味。"
+        },
+        reviews: {
+          en: [
+            {text: "Authentic flavors! The noodles were amazing.", author: "Sarah M.", rating: 5},
+            {text: "Queue moves fast and staff speaks English.", author: "James K.", rating: 4},
+            {text: "Best noodles I've had in China. Menu in English was helpful.", author: "Maria L.", rating: 5}
+          ],
+          es: [
+            {text: "¡Sabores auténticos! Los fideos fueron increíbles.", author: "Sarah M.", rating: 5},
+            {text: "La cola se mueve rápido y el personal habla inglés.", author: "James K.", rating: 4},
+            {text: "Los mejores fideos que he probado en China. El menú en inglés fue útil.", author: "Maria L.", rating: 5}
+          ],
+          ch: [
+            {text: "正宗的风味！面条太棒了。", author: "Sarah M.", rating: 5},
+            {text: "排队很快，员工会说英语。", author: "James K.", rating: 4},
+            {text: "我在中国吃过的最好的面条。英文菜单很有帮助。", author: "Maria L.", rating: 5}
+          ]
+        }
+      },
+      {
+        id:2,
+        name:"Ramen Tokyo",
+        cuisine:"Ramen",
+        rating:4.8,
+        sourceRatings:[4.8,4.7,4.9],
+        wait:40,
+        features:["verified","multilingual","group"],
+        price:12,
+        image:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=150&h=150&fit=crop",
+        desc: {
+          en: "Top ramen with authentic taste. Group bookings available with multilingual staff.",
+          es: "Ramen superior con sabor auténtico. Reservas grupales disponibles con personal multilingüe.",
+          ch: "顶级拉面，口味正宗。提供团体预订和多语言员工服务。"
+        },
+        reviews: {
+          en: [
+            {text: "Best ramen in town! Worth the wait.", author: "Tom R.", rating: 5},
+            {text: "Friendly staff speaks English and the broth is incredible.", author: "Lisa P.", rating: 5},
+            {text: "Perfect for groups. We booked for 8 people easily.", author: "David W.", rating: 4}
+          ],
+          es: [
+            {text: "¡El mejor ramen de la ciudad! Vale la pena la espera.", author: "Tom R.", rating: 5},
+            {text: "Personal amable que habla inglés y el caldo es increíble.", author: "Lisa P.", rating: 5},
+            {text: "Perfecto para grupos. Reservamos para 8 personas fácilmente.", author: "David W.", rating: 4}
+          ],
+          ch: [
+            {text: "城里最好的拉面！值得等待。", author: "Tom R.", rating: 5},
+            {text: "员工友好，会说英语，汤底非常棒。", author: "Lisa P.", rating: 5},
+            {text: "非常适合团体。我们轻松预订了8个人。", author: "David W.", rating: 4}
+          ]
+        }
+      },
+      {
+        id:3,
+        name:"Snail House Paris",
+        cuisine:"French",
+        rating:4.3,
+        sourceRatings:[4.2,4.4],
+        wait:10,
+        features:["premium","verified","multilingual"],
+        price:45,
+        image:"https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=150&h=150&fit=crop",
+        desc: {
+          en: "Known for escargot and romantic ambiance. Premium booking available with multilingual service.",
+          es: "Conocido por sus caracoles y ambiente romántico. Reserva premium disponible con servicio multilingüe.",
+          ch: "以蜗牛和浪漫氛围闻名。提供高级预订和多语言服务。"
+        },
+        reviews: {
+          en: [
+            {text: "Romantic atmosphere and excellent escargot.", author: "Emma C.", rating: 5},
+            {text: "Multilingual staff made us feel welcome.", author: "Robert J.", rating: 4},
+            {text: "Premium booking was worth it - no wait at all!", author: "Sophie M.", rating: 5}
+          ],
+          es: [
+            {text: "Ambiente romántico y excelentes caracoles.", author: "Emma C.", rating: 5},
+            {text: "El personal multilingüe nos hizo sentir bienvenidos.", author: "Robert J.", rating: 4},
+            {text: "La reserva premium valió la pena - ¡sin espera!", author: "Sophie M.", rating: 5}
+          ],
+          ch: [
+            {text: "浪漫的氛围和出色的蜗牛。", author: "Emma C.", rating: 5},
+            {text: "多语言员工让我们感到受欢迎。", author: "Robert J.", rating: 4},
+            {text: "高级预订很值得——完全不用等待！", author: "Sophie M.", rating: 5}
+          ]
+        }
+      },
+      {
+        id:4,
+        name:"Tapas Barcelona",
+        cuisine:"Spanish",
+        rating:4.5,
+        sourceRatings:[4.4,4.6],
+        wait:5,
+        features:["verified","skipQueue","group","offline"],
+        price:30,
+        image:"https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=150&h=150&fit=crop",
+        desc: {
+          en: "Great atmosphere and authentic tapas. Offline maps available for easy navigation.",
+          es: "Excelente ambiente y tapas auténticas. Mapas sin conexión disponibles para navegación fácil.",
+          ch: "氛围很棒，提供正宗塔帕斯。提供离线地图便于导航。"
+        },
+        reviews: {
+          en: [
+            {text: "Authentic tapas and great sangria!", author: "Carlos M.", rating: 5},
+            {text: "Quick seating with premium skip queue feature.", author: "Anna B.", rating: 4},
+            {text: "Perfect spot for group dinners. Offline maps helped us find it.", author: "Michael T.", rating: 5}
+          ],
+          es: [
+            {text: "¡Tapas auténticas y sangría excelente!", author: "Carlos M.", rating: 5},
+            {text: "Asiento rápido con la función premium de saltar la cola.", author: "Anna B.", rating: 4},
+            {text: "Lugar perfecto para cenas en grupo. Los mapas sin conexión nos ayudaron a encontrarlo.", author: "Michael T.", rating: 5}
+          ],
+          ch: [
+            {text: "正宗的塔帕斯和美味的桑格利亚酒！", author: "Carlos M.", rating: 5},
+            {text: "使用高级跳过排队功能快速入座。", author: "Anna B.", rating: 4},
+            {text: "团体晚餐的完美地点。离线地图帮我们找到了它。", author: "Michael T.", rating: 5}
+          ]
+        }
+      },
+      {
+        id:5,
+        name:"Cheesecake Factory (Demo)",
+        cuisine:"American",
+        rating:4.0,
+        sourceRatings:[4.0,4.1],
+        wait:22,
+        features:[],
+        price:18,
+        image:"https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=150&h=150&fit=crop",
+        desc: {
+          en: "Large portions, casual dining with extensive menu options.",
+          es: "Porciones grandes, comida casual con extensas opciones de menú.",
+          ch: "份量大，休闲餐饮，菜单选择丰富。"
+        }
+      },
+      {
+        id:6,
+        name:"Berlin Currywurst",
+        cuisine:"German",
+        rating:4.4,
+        sourceRatings:[4.3,4.5],
+        wait:8,
+        features:["verified","offline","multilingual"],
+        price:15,
+        image:"https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=150&h=150&fit=crop",
+        desc: {
+          en: "Authentic German street food. Offline navigation available with multilingual menus.",
+          es: "Comida callejera alemana auténtica. Navegación sin conexión disponible con menús multilingües.",
+          ch: "正宗德国街头美食。提供离线导航和多语言菜单。"
+        },
+        reviews: {
+          en: [
+            {text: "Quick service and delicious currywurst!", author: "Hans G.", rating: 4},
+            {text: "Great for a quick bite. English menu available.", author: "Julia W.", rating: 5},
+            {text: "Found it easily with offline maps when we had no signal.", author: "Paul R.", rating: 4}
+          ],
+          es: [
+            {text: "¡Servicio rápido y currywurst delicioso!", author: "Hans G.", rating: 4},
+            {text: "Excelente para un bocado rápido. Menú en inglés disponible.", author: "Julia W.", rating: 5},
+            {text: "Lo encontramos fácilmente con mapas sin conexión cuando no teníamos señal.", author: "Paul R.", rating: 4}
+          ],
+          ch: [
+            {text: "快速的服务和美味的咖喱香肠！", author: "Hans G.", rating: 4},
+            {text: "非常适合快速用餐。提供英文菜单。", author: "Julia W.", rating: 5},
+            {text: "当我们没有信号时，使用离线地图轻松找到了它。", author: "Paul R.", rating: 4}
+          ]
+        }
+      }
+    ];
+
+    // UI references
+    const nearbyList = document.getElementById('nearbyList');
+    const resultsGrid = document.getElementById('resultsGrid');
+    const reviewsArea = document.getElementById('reviewsArea');
+    const bookingOverlay = document.getElementById('bookingOverlay');
+    const countdownOverlay = document.getElementById('countdownOverlay');
+    const readyOverlay = document.getElementById('readyOverlay');
+    const reviewsOverlay = document.getElementById('reviewsOverlay');
+    const premiumOverlay = document.getElementById('premiumOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMeta = document.getElementById('modalMeta');
+    const countdownTitle = document.getElementById('countdownTitle');
+    const countdownSubtitle = document.getElementById('countdownSubtitle');
+    const countdownText = document.getElementById('countdownText');
+    const countdownTime = document.getElementById('countdownTime');
+    const restaurantInfo = document.getElementById('restaurantInfo');
+    const bookingDetails = document.getElementById('bookingDetails');
+    const readyTitle = document.getElementById('readyTitle');
+    const readyMessage = document.getElementById('readyMessage');
+    const readyRestaurant = document.getElementById('readyRestaurant');
+    const readyTime = document.getElementById('readyTime');
+    const reviewsModalTitle = document.getElementById('reviewsModalTitle');
+    const reviewsModalMeta = document.getElementById('reviewsModalMeta');
+    const reviewsContent = document.getElementById('reviewsContent');
+    const langToggle = document.getElementById('langToggle');
+    const subscribeBtn = document.getElementById('subscribeBtn');
+    const groupBookingCheckbox = document.getElementById('groupBooking');
+
+    let selectedRestaurant = null;
+    let user = {premium:false};
+    let activeFilters = new Set(['verified']);
+    let currentLang = 'en';
+    let countdownInterval = null;
+    let remainingTime = 0;
+
+    // Complete website translations
+    const translations = {
+      en: {
+        // Header
+        headerTitle: "EatEase — Restaurant Discovery & Booking",
+        headerSubtitle: "All-in-one global restaurant discovery • Real-time queue tracking • Verified reviews",
+        premiumBtn: "Go Premium",
+        
+        // Sidebar
+        searchPlaceholder: "Search restaurants or cuisine (e.g. ramen, snails)",
+        searchBtn: "Search",
+        mapText: "Map preview",
+        offlineText: "Offline maps available",
+        liveQueueText: "Live queue tracking",
+        updatedText: "Updated every 5s",
+        filtersText: "Quick filters",
+        filterVerified: "Verified Reviews",
+        filterSkipQueue: "Skip Queue",
+        filterPremium: "Guaranteed Booking",
+        filterMultilingual: "Multilingual Menu",
+        filterOffline: "Offline Maps",
+        filterGroup: "Group Booking",
+        
+        // Main content
+        trustedText: "Trusted by International Travelers",
+        heroTitle: "Find & Book Restaurants Globally — No Language Barriers",
+        heroSubtitle: "Real-time queue tracking • Verified multilingual reviews • Guaranteed reservations • Offline maps",
+        userTypeText: "Simulated user",
+        userDetails: "Traveler — 2 trips / year",
+        filterPlaceholder: "Filter by feature (e.g. skip queue)",
+        clearBtn: "Clear",
+        detailsTitle: "Restaurant Details",
+        selectRestaurant: "Select a restaurant to see details and verified reviews.",
+        viewReviews: "Reviews",
+        joinQueue: "Join",
+        bookNow: "Book Now",
+        
+        // Booking modal
+        bookTable: "Book Table",
+        premiumPlanTitle: "Premium Guarantee",
+        premiumPlanDesc: "Guaranteed seat • Skip queue • $4.99/month or $2.99 one-time",
+        standardPlanTitle: "Standard Queue",
+        standardPlanDesc: "Join digital queue (free) • Real-time updates",
+        groupBookingText: "Group booking (6+ people) - notify restaurant in advance",
+        cancelBtn: "Cancel",
+        confirmBooking: "Confirm Booking",
+        
+        // Countdown modal
+        countdownTitle: "Booking Confirmed!",
+        countdownSubtitle: "Your table will be ready in:",
+        countdownText: "Estimated wait time",
+        restaurantInfo: "Restaurant information",
+        bookingDetails: "Booking details",
+        cancelBooking: "Cancel Booking",
+        
+        // Ready modal
+        readyTitle: "Your Table is Ready!",
+        readyMessage: "Please proceed to the reception area. Your table is waiting for you!",
+        readyTime: "Ready now",
+        gotIt: "Got it!",
+        
+        // Reviews modal
+        verifiedReviews: "Verified Reviews",
+        closeBtn: "Close",
+        
+        // Premium modal
+        goPremium: "Go Premium",
+        premiumSubtitle: "Unlock exclusive features for international travelers",
+        feature1Title: "Guaranteed Reservations",
+        feature1Desc: "Skip the queue with guaranteed bookings at popular restaurants",
+        feature2Title: "Flexible Cancellation",
+        feature2Desc: "Cancel up to 1 hour before without penalty",
+        feature3Title: "Members-only Restaurants",
+        feature3Desc: "Access to premium/hard-to-book establishments",
+        feature4Title: "Shorter Wait Time",
+        feature4Desc: "Premium users get 1/3 of the normal wait time",
+        premiumPrice: "$4.99",
+        premiumAlternative: "or $2.99 per guaranteed booking",
+        subscribeNow: "Subscribe Now",
+        
+        // Footer
+        footerText: "Demo — All data is simulated for prototype. Based on real user validation with international travelers.",
+        
+        // Messages
+        alreadyPremium: "Already premium — thanks!",
+        subscribeConfirm: "Subscribe to Premium for $4.99/month? Get guaranteed bookings, skip queues, and offline maps.",
+        subscribed: "Subscribed — Premium features unlocked!",
+        premiumRequired: "Guaranteed bookings require Premium. Subscribe for $4.99/month or pay $2.99 one-time? (OK = subscribe, Cancel = one-time)",
+        bookingConfirmed: "Confirmed booking at",
+        groupNotification: "Group booking notification sent to restaurant.",
+        offlineAvailable: "Offline map available for navigation.",
+        enjoyMeal: "Enjoy your meal!",
+        noReviews: "No verified reviews yet for this restaurant."
+      },
+      es: {
+        // Header
+        headerTitle: "EatEase — Descubrimiento y Reserva de Restaurantes",
+        headerSubtitle: "Descubrimiento global de restaurantes todo en uno • Seguimiento de colas en tiempo real • Reseñas verificadas",
+        premiumBtn: "Pagar Premium",
+        
+        // Sidebar
+        searchPlaceholder: "Buscar restaurantes o cocina (ej. ramen, caracoles)",
+        searchBtn: "Buscar",
+        mapText: "Vista previa del mapa",
+        offlineText: "Mapas sin conexión disponibles",
+        liveQueueText: "Seguimiento de colas en vivo",
+        updatedText: "Actualizado cada 5s",
+        filtersText: "Filtros rápidos",
+        filterVerified: "Reseñas Verificadas",
+        filterSkipQueue: "Saltar Cola",
+        filterPremium: "Reserva Garantizada",
+        filterMultilingual: "Menú Multilingüe",
+        filterOffline: "Mapas Sin Conexión",
+        filterGroup: "Reserva Grupal",
+        
+        // Main content
+        trustedText: "Confiado por Viajeros Internacionales",
+        heroTitle: "Encuentra y Reserva Restaurantes Globalmente — Sin Barreras Lingüísticas",
+        heroSubtitle: "Seguimiento de colas en tiempo real • Reseñas multilingües verificadas • Reservas garantizadas • Mapas sin conexión",
+        userTypeText: "Usuario simulado",
+        userDetails: "Viajero — 2 viajes / año",
+        filterPlaceholder: "Filtrar por característica (ej. saltar cola)",
+        clearBtn: "Limpiar",
+        detailsTitle: "Detalles del Restaurante",
+        selectRestaurant: "Selecciona un restaurante para ver detalles y reseñas verificadas.",
+        viewReviews: "Reseñas",
+        joinQueue: "Unirse",
+        bookNow: "Reservar Ahora",
+        
+        // Booking modal
+        bookTable: "Reservar Mesa",
+        premiumPlanTitle: "Garantía Premium",
+        premiumPlanDesc: "Asiento garantizado • Saltar cola • $4.99/mes o $2.99 única vez",
+        standardPlanTitle: "Cola Estándar",
+        standardPlanDesc: "Unirse a cola digital (gratis) • Actualizaciones en tiempo real",
+        groupBookingText: "Reserva grupal (6+ personas) - notificar al restaurante con anticipación",
+        cancelBtn: "Cancelar",
+        confirmBooking: "Confirmar Reserva",
+        
+        // Countdown modal
+        countdownTitle: "¡Reserva Confirmada!",
+        countdownSubtitle: "Tu mesa estará lista en:",
+        countdownText: "Tiempo de espera estimado",
+        restaurantInfo: "Información del restaurante",
+        bookingDetails: "Detalles de la reserva",
+        cancelBooking: "Cancelar Reserva",
+        
+        // Ready modal
+        readyTitle: "¡Tu Mesa está Lista!",
+        readyMessage: "Por favor, dirígete al área de recepción. ¡Tu mesa te está esperando!",
+        readyTime: "Listo ahora",
+        gotIt: "¡Entendido!",
+        
+        // Reviews modal
+        verifiedReviews: "Reseñas Verificadas",
+        closeBtn: "Cerrar",
+        
+        // Premium modal
+        goPremium: "Pagar Premium",
+        premiumSubtitle: "Desbloquea funciones exclusivas para viajeros internacionales",
+        feature1Title: "Reservas Garantizadas",
+        feature1Desc: "Salta la cola con reservas garantizadas en restaurantes populares",
+        feature2Title: "Mapas y Menús Sin Conexión",
+        feature2Desc: "Accede a información de restaurantes y navegación sin conexión a internet",
+        feature3Title: "Soporte Prioritario",
+        feature3Desc: "Soporte al cliente multilingüe 24/7 para tus viajes",
+        feature4Title: "Herramientas de Reserva Grupal",
+        feature4Desc: "Reserva fácil para grupos grandes y viajes familiares",
+        premiumPrice: "$4.99",
+        premiumAlternative: "o $2.99 por reserva garantizada",
+        subscribeNow: "Suscribirse Ahora",
+        
+        // Footer
+        footerText: "Demo — Todos los datos son simulados para prototipo. Basado en validación real con viajeros internacionales.",
+        
+        // Messages
+        alreadyPremium: "Ya eres premium — ¡gracias!",
+        subscribeConfirm: "¿Suscribirse a Premium por $4.99/mes? Obtén reservas garantizadas, salta colas y mapas sin conexión.",
+        subscribed: "¡Suscrito — Funciones premium desbloqueadas!",
+        premiumRequired: "Las reservas garantizadas requieren Premium. ¿Suscribirse por $4.99/mes o pagar $2.99 por única vez? (OK = suscribirse, Cancelar = única vez)",
+        bookingConfirmed: "Reserva confirmada en",
+        groupNotification: "Notificación de reserva grupal enviada al restaurante.",
+        offlineAvailable: "Mapa sin conexión disponible para navegación.",
+        enjoyMeal: "¡Disfruta tu comida!",
+        noReviews: "Aún no hay reseñas verificadas para este restaurante."
+      },
+      ch: {
+        // Header
+        headerTitle: "EatEase — 餐厅发现与预订",
+        headerSubtitle: "一体化全球餐厅发现 • 实时排队跟踪 • 已验证评价",
+        premiumBtn: "开通高级版",
+        
+        // Sidebar
+        searchPlaceholder: "搜索餐厅或美食（例如：拉面，蜗牛）",
+        searchBtn: "搜索",
+        mapText: "地图预览",
+        offlineText: "离线地图可用",
+        liveQueueText: "实时排队跟踪",
+        updatedText: "每5秒更新",
+        filtersText: "快速筛选",
+        filterVerified: "已验证评价",
+        filterSkipQueue: "跳过排队",
+        filterPremium: "保证预订",
+        filterMultilingual: "多语言菜单",
+        filterOffline: "离线地图",
+        filterGroup: "团体预订",
+        
+        // Main content
+        trustedText: "受国际旅客信赖",
+        heroTitle: "全球寻找和预订餐厅 — 无语言障碍",
+        heroSubtitle: "实时排队跟踪 • 已验证多语言评价 • 保证预订 • 离线地图",
+        userTypeText: "模拟用户",
+        userDetails: "旅客 — 每年2次旅行",
+        filterPlaceholder: "按功能筛选（例如：跳过排队）",
+        clearBtn: "清除",
+        detailsTitle: "餐厅详情",
+        selectRestaurant: "选择餐厅查看详情和已验证评价。",
+        viewReviews: "评价",
+        joinQueue: "加入",
+        bookNow: "立即预订",
+        
+        // Booking modal
+        bookTable: "预订餐桌",
+        premiumPlanTitle: "高级保证",
+        premiumPlanDesc: "保证座位 • 跳过排队 • $4.99/月或$2.99单次",
+        standardPlanTitle: "标准排队",
+        standardPlanDesc: "加入数字队列（免费）• 实时更新",
+        groupBookingText: "团体预订（6人以上）- 提前通知餐厅",
+        cancelBtn: "取消",
+        confirmBooking: "确认预订",
+        
+        // Countdown modal
+        countdownTitle: "预订已确认！",
+        countdownSubtitle: "您的餐桌将在以下时间内准备好：",
+        countdownText: "预计等待时间",
+        restaurantInfo: "餐厅信息",
+        bookingDetails: "预订详情",
+        cancelBooking: "取消预订",
+        
+        // Ready modal
+        readyTitle: "您的餐桌已准备好！",
+        readyMessage: "请前往接待区。您的餐桌正在等候您！",
+        readyTime: "现在可用",
+        gotIt: "知道了！",
+        
+        // Reviews modal
+        verifiedReviews: "已验证评价",
+        closeBtn: "关闭",
+        
+        // Premium modal
+        goPremium: "开通高级版",
+        premiumSubtitle: "为国际旅客解锁专属功能",
+        feature1Title: "保证预订",
+        feature1Desc: "在热门餐厅跳过排队，享受保证预订",
+        feature2Title: "离线地图和菜单",
+        feature2Desc: "无网络连接时访问餐厅信息和导航",
+        feature3Title: "优先支持",
+        feature3Desc: "为您的旅行提供24/7多语言客户支持",
+        feature4Title: "团体预订工具",
+        feature4Desc: "轻松预订大型团体和家庭旅行",
+        premiumPrice: "$4.99",
+        premiumAlternative: "或每次保证预订$2.99",
+        subscribeNow: "立即订阅",
+        
+        // Footer
+        footerText: "演示 — 所有数据均为原型模拟。基于真实国际旅客验证。",
+        
+        // Messages
+        alreadyPremium: "已是高级用户 — 谢谢！",
+        subscribeConfirm: "订阅高级版，每月$4.99？获得保证预订、跳过排队和离线地图。",
+        subscribed: "已订阅 — 高级功能已解锁！",
+        premiumRequired: "保证预订需要高级版。订阅每月$4.99或支付$2.99单次？（确定 = 订阅，取消 = 单次）",
+        bookingConfirmed: "预订确认于",
+        groupNotification: "团体预订通知已发送至餐厅。",
+        offlineAvailable: "离线地图可用于导航。",
+        enjoyMeal: "祝您用餐愉快！",
+        noReviews: "此餐厅尚无已验证评价。"
+      }
+    };
+
+    // Update entire website language
+    function updateLanguage(lang) {
+      const t = translations[lang];
+      
+      // Header
+      document.getElementById('headerTitle').textContent = t.headerTitle;
+      document.getElementById('headerSubtitle').textContent = t.headerSubtitle;
+      document.getElementById('subscribeBtn').textContent = user.premium ? 'Premium ✓' : t.premiumBtn;
+      
+      // Sidebar
+      document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+      document.getElementById('searchBtn').textContent = t.searchBtn;
+      document.getElementById('mapText').textContent = t.mapText;
+      document.getElementById('offlineText').textContent = t.offlineText;
+      document.getElementById('liveQueueText').textContent = t.liveQueueText;
+      document.getElementById('updatedText').textContent = t.updatedText;
+      document.getElementById('filtersText').textContent = t.filtersText;
+      document.getElementById('filterVerified').textContent = t.filterVerified;
+      document.getElementById('filterSkipQueue').textContent = t.filterSkipQueue;
+      document.getElementById('filterPremium').textContent = t.filterPremium;
+      document.getElementById('filterMultilingual').textContent = t.filterMultilingual;
+      document.getElementById('filterOffline').textContent = t.filterOffline;
+      document.getElementById('filterGroup').textContent = t.filterGroup;
+      
+      // Main content
+      document.getElementById('trustedText').textContent = t.trustedText;
+      document.getElementById('heroTitle').textContent = t.heroTitle;
+      document.getElementById('heroSubtitle').textContent = t.heroSubtitle;
+      document.getElementById('userTypeText').textContent = t.userTypeText;
+      document.getElementById('userDetails').textContent = t.userDetails;
+      document.getElementById('filterInput').placeholder = t.filterPlaceholder;
+      document.getElementById('clearFilter').textContent = t.clearBtn;
+      document.getElementById('detailsTitle').textContent = t.detailsTitle;
+      if (reviewsArea.textContent.includes("Select a restaurant") || reviewsArea.textContent.includes("Selecciona un restaurante") || reviewsArea.textContent.includes("选择餐厅")) {
+        reviewsArea.textContent = t.selectRestaurant;
+      }
+      
+      // Footer
+      document.getElementById('footerText').textContent = t.footerText;
+      
+      // Update buttons in restaurant cards
+      updateRestaurantCardsLanguage(t);
+      
+      // Update restaurant descriptions
+      updateRestaurantDescriptions();
+      
+      // Update modals if they're open
+      updateModalsLanguage(t);
+    }
+
+    function updateRestaurantCardsLanguage(t) {
+      // Update nearby list
+      const nearbyButtons = nearbyList.querySelectorAll('button');
+      nearbyButtons.forEach(btn => {
+        if (btn.textContent === 'Reviews' || btn.textContent === 'Reseñas' || btn.textContent === '评价') {
+          btn.textContent = t.viewReviews;
+        }
+        if (btn.textContent === 'Join' || btn.textContent === 'Unirse' || btn.textContent === '加入') {
+          btn.textContent = t.joinQueue;
+        }
+      });
+      
+      // Update results grid
+      const gridButtons = resultsGrid.querySelectorAll('button');
+      gridButtons.forEach(btn => {
+        if (btn.textContent === 'Reviews' || btn.textContent === 'Reseñas' || btn.textContent === '评价') {
+          btn.textContent = t.viewReviews;
+        }
+        if (btn.textContent === 'Book Now' || btn.textContent === 'Reservar Ahora' || btn.textContent === '立即预订') {
+          btn.textContent = t.bookNow;
+        }
+      });
+    }
+
+    function updateRestaurantDescriptions() {
+      // Update restaurant descriptions in the results grid
+      const restaurantCards = resultsGrid.querySelectorAll('.restcard');
+      restaurantCards.forEach(card => {
+        const nameElement = card.querySelector('strong');
+        if (nameElement) {
+          const restaurantName = nameElement.textContent;
+          const restaurant = restaurants.find(r => r.name === restaurantName);
+          if (restaurant && restaurant.desc) {
+            const descElement = card.querySelector('.meta').nextElementSibling;
+            if (descElement) {
+              descElement.textContent = restaurant.desc[currentLang] || restaurant.desc.en;
+            }
+          }
+        }
+      });
+    }
+
+    function updateModalsLanguage(t) {
+      // Booking modal
+      if (bookingOverlay.style.display === 'flex') {
+        document.getElementById('modalTitle').textContent = t.bookTable;
+        document.getElementById('premiumPlanTitle').textContent = t.premiumPlanTitle;
+        document.getElementById('premiumPlanDesc').textContent = t.premiumPlanDesc;
+        document.getElementById('standardPlanTitle').textContent = t.standardPlanTitle;
+        document.getElementById('standardPlanDesc').textContent = t.standardPlanDesc;
+        document.getElementById('groupBookingText').textContent = t.groupBookingText;
+        document.getElementById('closeBookingModal').textContent = t.cancelBtn;
+        document.getElementById('confirmBooking').textContent = t.confirmBooking;
+      }
+      
+      // Countdown modal
+      if (countdownOverlay.style.display === 'flex') {
+        document.getElementById('countdownTitle').textContent = t.countdownTitle;
+        document.getElementById('countdownSubtitle').textContent = t.countdownSubtitle;
+        document.getElementById('countdownText').textContent = t.countdownText;
+        document.getElementById('cancelCountdown').textContent = t.cancelBooking;
+      }
+      
+      // Ready modal
+      if (readyOverlay.style.display === 'flex') {
+        document.getElementById('readyTitle').textContent = t.readyTitle;
+        document.getElementById('readyMessage').textContent = t.readyMessage;
+        document.getElementById('readyTime').textContent = t.readyTime;
+        document.getElementById('closeReadyModal').textContent = t.gotIt;
+      }
+      
+      // Reviews modal
+      if (reviewsOverlay.style.display === 'flex') {
+        document.getElementById('reviewsModalTitle').textContent = t.verifiedReviews;
+        document.getElementById('closeReviewsModal').textContent = t.closeBtn;
+        const bookBtn = reviewsOverlay.querySelector('.primary');
+        bookBtn.textContent = t.bookNow;
+        
+        // Update reviews content if a restaurant is selected
+        if (selectedRestaurant) {
+          updateReviewsContent(selectedRestaurant);
+        }
+      }
+      
+      // Premium modal
+      if (premiumOverlay.style.display === 'flex') {
+        document.getElementById('premiumModalTitle').textContent = t.goPremium;
+        document.getElementById('premiumModalSubtitle').textContent = t.premiumSubtitle;
+        document.getElementById('feature1Title').textContent = t.feature1Title;
+        document.getElementById('feature1Desc').textContent = t.feature1Desc;
+        document.getElementById('feature2Title').textContent = t.feature2Title;
+        document.getElementById('feature2Desc').textContent = t.feature2Desc;
+        document.getElementById('feature3Title').textContent = t.feature3Title;
+        document.getElementById('feature3Desc').textContent = t.feature3Desc;
+        document.getElementById('feature4Title').textContent = t.feature4Title;
+        document.getElementById('feature4Desc').textContent = t.feature4Desc;
+        document.getElementById('premiumPrice').innerHTML = t.premiumPrice + '<span style="font-size:14px;color:var(--muted)">/month</span>';
+        document.getElementById('premiumAlternative').textContent = t.premiumAlternative;
+        document.getElementById('closePremiumModal').textContent = t.cancelBtn;
+        document.getElementById('confirmPremium').textContent = t.subscribeNow;
+      }
+    }
+
+    function startCountdown(restaurant, isPremium, isGroup) {
+      const t = translations[currentLang];
+      
+      // Calculate wait time (premium users get shorter wait)
+      let waitTime = isPremium ? Math.max(1, Math.floor(restaurant.wait / 3)) : restaurant.wait;
+      if (isGroup) {
+        waitTime = Math.floor(waitTime * 1.2); // Groups take 20% longer
+      }
+      
+      // Convert to seconds for countdown
+      remainingTime = waitTime * 60;
+      
+      // Update countdown modal content
+      document.getElementById('countdownTitle').textContent = t.countdownTitle;
+      document.getElementById('countdownSubtitle').textContent = t.countdownSubtitle;
+      document.getElementById('countdownText').textContent = t.countdownText;
+      document.getElementById('restaurantInfo').textContent = `${restaurant.name} • ${restaurant.cuisine}`;
+      document.getElementById('bookingDetails').textContent = isPremium ? 
+        `Premium Booking • ${isGroup ? 'Group' : 'Individual'}` : 
+        `Standard Queue • ${isGroup ? 'Group' : 'Individual'}`;
+      
+      // Show countdown modal
+      bookingOverlay.style.display = 'none';
+      countdownOverlay.style.display = 'flex';
+      
+      // Start countdown
+      updateCountdownDisplay();
+      countdownInterval = setInterval(updateCountdown, 1000);
+    }
+
+    function updateCountdown() {
+      remainingTime--;
+      updateCountdownDisplay();
+      
+      if (remainingTime <= 0) {
+        clearInterval(countdownInterval);
+        showReadyModal();
+      }
+    }
+
+    function updateCountdownDisplay() {
+      const minutes = Math.floor(remainingTime / 60);
+      const seconds = remainingTime % 60;
+      const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      document.getElementById('countdownTime').textContent = timeString;
+    }
+
+    function showReadyModal() {
+      const t = translations[currentLang];
+      
+      document.getElementById('readyTitle').textContent = t.readyTitle;
+      document.getElementById('readyMessage').textContent = t.readyMessage;
+      document.getElementById('readyRestaurant').textContent = selectedRestaurant.name;
+      document.getElementById('readyTime').textContent = t.readyTime;
+      document.getElementById('closeReadyModal').textContent = t.gotIt;
+      
+      countdownOverlay.style.display = 'none';
+      readyOverlay.style.display = 'flex';
+    }
+
+    function cancelCountdown() {
+      clearInterval(countdownInterval);
+      countdownOverlay.style.display = 'none';
+      alert("Booking cancelled");
+    }
+
+    // Render nearby list (sidebar) with live wait times
+    function renderNearby(){
+      nearbyList.innerHTML = '';
+      restaurants.slice(0,4).forEach(r=>{
+        const el = document.createElement('div'); el.className='card';
+        el.innerHTML = `
+          <div class="thumb"><img src="${r.image}" alt="${r.name}" /></div>
+          <div style="flex:1">
+            <div class="rname">${r.name}</div>
+            <div class="meta">${r.cuisine} • ${r.price}\$ avg</div>
+            <div style="margin-top:6px">
+              ${r.features.map(f => `<span class="feature-tag">${f}</span>`).join('')}
+            </div>
+            <div style="margin-top:6px"><span class="badge">Wait: <span class="wait" id="wait-${r.id}">${r.wait}m</span></span></div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="viewReviews(${r.id})">${translations[currentLang].viewReviews}</button>
+            <button class="btn" onclick="openBooking(${r.id},'queue')">${translations[currentLang].joinQueue}</button>
+          </div>
+        `;
+        nearbyList.appendChild(el);
+      });
+    }
+
+    // Render results grid with filtering
+    function renderResults(filter){
+      resultsGrid.innerHTML='';
+      let list = restaurants.filter(r => 
+        (!filter || r.name.toLowerCase().includes(filter) || r.cuisine.toLowerCase().includes(filter) || r.features.join(' ').includes(filter)) &&
+        (activeFilters.size === 0 || activeFilters.has('all') || activeFilters.values().some(f => r.features.includes(f)))
+      );
+      
+      list.forEach(r=>{
+        const desc = r.desc ? (r.desc[currentLang] || r.desc.en) : '';
+        const el = document.createElement('div'); el.className='restcard';
+        el.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:64px;height:64px;border-radius:10px;overflow:hidden"><img src="${r.image}" alt="${r.name}" style="width:100%;height:100%;object-fit:cover" /></div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px"><strong>${r.name}</strong><div class="stars">★ ${r.rating}</div></div>
+              <div class="meta">${r.cuisine} • ${r.price}$ avg</div>
+              <div style="margin-top:8px;color:var(--muted);font-size:13px">${desc}</div>
+              <div style="margin-top:8px">
+                ${r.features.map(f => `<span class="feature-tag">${f}</span>`).join('')}
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div class="badge">Wait: <span class="wait" id="wait-card-${r.id}">${r.wait}m</span></div>
+              <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+                <button class="btn" onclick="viewReviews(${r.id})">${translations[currentLang].viewReviews}</button>
+                <button class="primary" onclick="openBooking(${r.id},'guarantee')">${translations[currentLang].bookNow}</button>
+              </div>
+            </div>
+          </div>
+        `;
+        resultsGrid.appendChild(el);
+      });
+    }
+
+    function viewDetails(id){
+      const r = restaurants.find(x=>x.id===id); selectedRestaurant=r;
+      // Aggregate reviews (simulated)
+      const agg = Math.round((r.sourceRatings.reduce((a,b)=>a+b,0)/r.sourceRatings.length)*10)/10;
+      const desc = r.desc ? (r.desc[currentLang] || r.desc.en) : '';
+      
+      let detailsHTML = `<strong>${r.name}</strong> — Rating: ${agg} / 5<br/><br/>`;
+      detailsHTML += `${r.cuisine} • $${r.price} average<br/>`;
+      detailsHTML += `${desc}<br/><br/>`;
+      detailsHTML += `<button class="btn" onclick="viewReviews(${r.id})">${translations[currentLang].viewReviews}</button>`;
+      
+      reviewsArea.innerHTML = detailsHTML;
+      // highlight map preview
+      document.getElementById('mapArea').innerHTML = `
+        <div>📍 ${r.name}</div>
+        <div style="font-size:12px;margin-top:8px">${r.features.includes('offline') ? translations[currentLang].offlineText : 'Online map only'}</div>
+      `;
+    }
+
+    function viewReviews(id){
+      const r = restaurants.find(x=>x.id===id); 
+      selectedRestaurant = r;
+      
+      if (!r.reviews) {
+        reviewsModalTitle.textContent = `${translations[currentLang].verifiedReviews} — ${r.name}`;
+        reviewsModalMeta.textContent = `${r.cuisine} • Rating: ${r.rating}/5`;
+        reviewsContent.innerHTML = `<p>${translations[currentLang].noReviews}</p>`;
+      } else {
+        updateReviewsContent(r);
+      }
+      
+      reviewsOverlay.style.display = 'flex';
+    }
+
+    function updateReviewsContent(restaurant) {
+      const t = translations[currentLang];
+      reviewsModalTitle.textContent = `${t.verifiedReviews} — ${restaurant.name}`;
+      reviewsModalMeta.textContent = `${restaurant.cuisine} • Rating: ${restaurant.rating}/5 • Language: ${currentLang.toUpperCase()}`;
+      
+      const reviews = restaurant.reviews[currentLang] || restaurant.reviews.en;
+      const agg = Math.round((restaurant.sourceRatings.reduce((a,b)=>a+b,0)/restaurant.sourceRatings.length)*10)/10;
+      
+      let reviewsHTML = `
+        <div style="margin-bottom:16px">
+          <strong>Aggregated Rating:</strong> ${agg}/5 from ${restaurant.sourceRatings.length} verified sources
+        </div>
+      `;
+      
+      if (reviews && reviews.length > 0) {
+        reviews.forEach(review => {
+          let stars = '';
+          for (let i = 0; i < 5; i++) {
+            stars += i < review.rating ? '★' : '☆';
+          }
+          reviewsHTML += `
+            <div class="review-item">
+              <div class="stars">${stars}</div>
+              <div class="review-text">"${review.text}"</div>
+              <div class="review-meta">— ${review.author}</div>
+            </div>
+          `;
+        });
+      } else {
+        reviewsHTML += `<p>No reviews available in ${currentLang.toUpperCase()}. Switching to English.</p>`;
+        // Fallback to English if no reviews in current language
+        const englishReviews = restaurant.reviews.en;
+        if (englishReviews) {
+          englishReviews.forEach(review => {
+            let stars = '';
+            for (let i = 0; i < 5; i++) {
+              stars += i < review.rating ? '★' : '☆';
+            }
+            reviewsHTML += `
+              <div class="review-item">
+                <div class="stars">${stars}</div>
+                <div class="review-text">"${review.text}"</div>
+                <div class="review-meta">— ${review.author}</div>
+              </div>
+            `;
+          });
+        }
+      }
+      
+      reviewsContent.innerHTML = reviewsHTML;
+    }
+
+    function openBooking(id,mode){
+      const r = restaurants.find(x=>x.id===id); selectedRestaurant=r;
+      modalTitle.textContent = `${translations[currentLang].bookTable} — ${r.name}`;
+      modalMeta.textContent = `${r.cuisine} • Avg $${r.price} • Current wait ${r.wait}m`;
+      bookingOverlay.style.display='flex';
+      groupBookingCheckbox.checked = false;
+
+      // Reset and set default selection
+      document.querySelectorAll('.plan').forEach(p => p.classList.remove('selected'));
+      if (mode === 'guarantee') {
+        document.querySelector('.plan:first-child').classList.add('selected');
+      } else {
+        document.querySelector('.plan:last-child').classList.add('selected');
+      }
+
+      // store chosen mode
+      bookingOverlay.dataset.mode = mode;
+    }
+
+    function openPremiumModal(){
+      premiumOverlay.style.display='flex';
+    }
+
+    document.getElementById('closeBookingModal').addEventListener('click',()=>bookingOverlay.style.display='none');
+    document.getElementById('closeReviewsModal').addEventListener('click',()=>reviewsOverlay.style.display='none');
+    document.getElementById('closePremiumModal').addEventListener('click',()=>premiumOverlay.style.display='none');
+    document.getElementById('closeReadyModal').addEventListener('click',()=>readyOverlay.style.display='none');
+    document.getElementById('cancelCountdown').addEventListener('click', cancelCountdown);
+
+    document.getElementById('confirmBooking').addEventListener('click',()=>{
+      const selectedPlan = document.querySelector('.plan.selected');
+      const isPremiumPlan = selectedPlan && selectedPlan.querySelector('#premiumPlanTitle');
+      const mode = isPremiumPlan ? 'guarantee' : 'queue';
+      const isGroupBooking = groupBookingCheckbox.checked;
+      const t = translations[currentLang];
+      
+      if(mode==='guarantee' && !user.premium){
+        // ask to subscribe or one-off
+        const choice = confirm(t.premiumRequired);
+        if(choice){
+          user.premium = true; 
+          subscribeBtn.textContent='Premium ✓';
+        }
+      }
+      
+      // Start countdown instead of showing alert
+      startCountdown(selectedRestaurant, mode === 'guarantee', isGroupBooking);
+    });
+
+    document.getElementById('confirmPremium').addEventListener('click',()=>{
+      const t = translations[currentLang];
+      user.premium = true; 
+      subscribeBtn.textContent='Premium ✓'; 
+      alert(t.subscribed);
+      premiumOverlay.style.display='none';
+    });
+
+    // Plan selection
+    document.querySelectorAll('.plan').forEach(plan => {
+      plan.addEventListener('click', function() {
+        document.querySelectorAll('.plan').forEach(p => p.classList.remove('selected'));
+        this.classList.add('selected');
+      });
+    });
+
+    // Filter chips functionality
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        const filter = this.dataset.filter;
+        
+        if (filter === 'all') {
+          // Toggle all filters
+          if (this.classList.contains('active')) {
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            activeFilters.clear();
+          } else {
+            document.querySelectorAll('.chip').forEach(c => c.classList.add('active'));
+            restaurants.forEach(r => {
+              r.features.forEach(f => activeFilters.add(f));
+            });
+          }
+        } else {
+          // Toggle single filter
+          this.classList.toggle('active');
+          if (this.classList.contains('active')) {
+            activeFilters.add(filter);
+          } else {
+            activeFilters.delete(filter);
+          }
+        }
+        
+        renderResults();
+      });
+    });
+
+    // Live queue simulation (randomly varies wait times) - updates every 5s
+    function tickQueues(){
+      restaurants.forEach(r=>{
+        // random walk
+        const delta = Math.round((Math.random()-0.45)*6);
+        r.wait = Math.max(0, r.wait + delta);
+        const el = document.getElementById('wait-'+r.id);
+        const el2 = document.getElementById('wait-card-'+r.id);
+        if(el) el.textContent = r.wait + 'm';
+        if(el2) el2.textContent = r.wait + 'm';
+      });
+    }
+    setInterval(tickQueues,5000);
+
+    // Search
+    document.getElementById('searchBtn').addEventListener('click',()=>{
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      renderResults(q);
+    });
+    document.getElementById('clearFilter').addEventListener('click',()=>{
+      document.getElementById('filterInput').value=''; 
+      renderResults();
+    });
+
+    // Text filter
+    document.getElementById('filterInput').addEventListener('input',(e)=>{
+      const v = e.target.value.trim().toLowerCase(); 
+      renderResults(v);
+    });
+
+    // Language toggle
+    langToggle.addEventListener('click',()=>{
+      const order=['en','es','ch'];
+      currentLang = order[(order.indexOf(currentLang)+1)%3];
+      langToggle.textContent = currentLang.toUpperCase();
+      updateLanguage(currentLang);
+    });
+
+    // Premium button click
+    subscribeBtn.addEventListener('click',()=>{
+      if(user.premium){ 
+        alert(translations[currentLang].alreadyPremium); 
+        return; 
+      }
+      openPremiumModal();
+    });
+
+    // initial render
+    renderNearby(); 
+    renderResults();
+    updateLanguage(currentLang);
+
+    // Accessibility: keyboard close overlays
+    document.addEventListener('keydown',(e)=>{ 
+      if(e.key==='Escape') {
+        bookingOverlay.style.display='none';
+        reviewsOverlay.style.display='none';
+        premiumOverlay.style.display='none';
+        countdownOverlay.style.display='none';
+        readyOverlay.style.display='none';
+      }
+    });
+
+  </script>
+</body>
+</html>
