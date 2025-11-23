@@ -51,6 +51,7 @@
     .plan{background:linear-gradient(180deg,#062a29,#072b2b);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:all 0.2s ease}
     .plan.selected{border:2px solid #00c2a8;background:linear-gradient(180deg,#083a38,#073b3a)}
     .feature-tag{display:inline-block;padding:4px 8px;background:rgba(0,194,168,0.1);color:var(--accent);border-radius:6px;font-size:12px;margin-right:6px;margin-top:4px}
+    .feature-tag.cancellation{background:rgba(255,100,100,0.1);color:#ff6b6b;border:1px solid rgba(255,100,100,0.3)}
     .review-item{padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;margin-bottom:8px}
     .review-text{font-style:italic;margin:8px 0}
     .review-meta{font-size:12px;color:var(--muted)}
@@ -62,8 +63,32 @@
     .booking-ready{text-align:center;padding:20px}
     .ready-icon{font-size:48px;margin-bottom:16px}
     .pulse{animation:pulse 2s infinite}
+    
+    /* NEW STYLES */
+    .countdown-minimized{position:fixed;bottom:20px;right:20px;width:300px;background:#071827;border-radius:12px;padding:16px;border:2px solid var(--accent);box-shadow:0 8px 32px rgba(0,0,0,0.3);z-index:999}
+    .minimized-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .minimized-time{font-size:24px;font-weight:700;color:var(--accent);font-family:monospace;text-align:center}
+    .minimized-restaurant{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
+    .cancellation-fee{background:rgba(255,100,100,0.1);padding:8px 12px;border-radius:8px;margin:8px 0;border:1px solid rgba(255,100,100,0.3)}
+    .calendar-input{display:flex;gap:8px;margin:12px 0}
+    .calendar-input input{flex:1;padding:10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:inherit}
+    .menu-section{margin:16px 0}
+    .menu-category{margin-bottom:20px}
+    .menu-item{display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all 0.2s}
+    .menu-item:hover{background:rgba(255,255,255,0.05)}
+    .menu-item.selected{background:rgba(0,194,168,0.1);border:1px solid var(--accent)}
+    .menu-item-price{color:var(--accent);font-weight:700}
+    .order-summary{background:rgba(255,255,255,0.02);padding:16px;border-radius:8px;margin:16px 0}
+    .order-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+    .order-total{display:flex;justify-content:space-between;font-weight:700;font-size:18px;margin-top:12px;padding-top:12px;border-top:2px solid rgba(255,255,255,0.1)}
+    .quantity-controls{display:flex;align-items:center;gap:8px}
+    .quantity-btn{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#012;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700}
+    .btn-secondary{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:inherit;padding:8px 10px;border-radius:10px;cursor:pointer;transition:all 0.2s}
+    .btn-secondary:hover{background:rgba(255,255,255,0.08)}
+    .btn-disabled{opacity:0.5;cursor:not-allowed}
+    
     @keyframes pulse{0%{opacity:1}50%{opacity:0.5}100%{opacity:1}}
-    @media(max-width:900px){main{grid-template-columns:1fr;padding:12px} .sidebar{order:2} .content{order:1} .hero .copy{max-width:100%}}
+    @media(max-width:900px){main{grid-template-columns:1fr;padding:12px} .sidebar{order:2} .content{order:1} .hero .copy{max-width:100%} .countdown-minimized{width:calc(100% - 40px)}}
   </style>
 </head>
 <body>
@@ -115,7 +140,7 @@
       <div class="hero">
         <div class="copy">
           <div class="pill" id="trustedText">Trusted by International Travelers</div>
-          <h2 style="margin:8px 0 4px" id="heroTitle">Find & Book Restaurants Globally — No Language Barriers</h2>
+          <h2 style="margin:8px 0 4px" id="heroTitle">Find & Book Restaurants Globally</h2>
           <div style="color:var(--muted)" id="heroSubtitle">Real-time queue tracking • Verified multilingual reviews • Guaranteed reservations • Offline maps</div>
         </div>
         <div style="text-align:right">
@@ -143,11 +168,16 @@
 
   <footer id="footerText">Demo — All data is simulated for prototype. Based on real user validation with international travelers.</footer>
 
-  <!-- Booking Modal -->
+  <!-- Booking modal -->
   <div class="overlay" id="bookingOverlay">
     <div class="modal" role="dialog" aria-modal="true">
       <h3 id="modalTitle">Book Table</h3>
       <p id="modalMeta" style="color:var(--muted)"></p>
+
+      <!-- Date and Time Selection -->
+      <div class="calendar-input">
+        <input type="datetime-local" id="bookingDateTime" min="" max="" />
+      </div>
 
       <div style="display:flex;gap:8px;margin-top:12px">
         <div class="plan" style="flex:1">
@@ -160,6 +190,12 @@
         </div>
       </div>
 
+      <!-- Cancellation Fee Warning (only for Snail House Paris) -->
+      <div id="cancellationFeeWarning" style="display:none" class="cancellation-fee">
+        <strong>⚠ Cancellation Policy</strong>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px">Cancellations within 2 hours incur a $25 fee</div>
+      </div>
+
       <!-- Group booking option -->
       <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.02);border-radius:8px">
         <label style="display:flex;align-items:center;gap:8px">
@@ -169,13 +205,41 @@
       </div>
 
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-        <button class="btn" id="closeBookingModal">Cancel</button>
+        <button class="btn" id="closeBookingmodal">Cancel</button>
         <button class="primary" id="confirmBooking">Confirm Booking</button>
       </div>
     </div>
   </div>
 
-  <!-- Countdown Modal -->
+  <!-- Menu & Order modal -->
+  <div class="overlay" id="menuOverlay">
+    <div class="modal" role="dialog" aria-modal="true" style="max-width:600px">
+      <h3 id="menumodalTitle">Menu</h3>
+      <p id="menumodalMeta" style="color:var(--muted)"></p>
+      
+      <div id="menuContent">
+        <!-- Menu will be populated here -->
+      </div>
+
+      <!-- Order Summary -->
+      <div id="orderSummary" class="order-summary" style="display:none">
+        <h4 id="orderSummaryTitle">Your Order</h4>
+        <div id="orderItems"></div>
+        <div class="order-total">
+          <span id="totalText">Total:</span>
+          <span id="orderTotal">$0.00</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn" id="closeMenumodal">Close</button>
+        <button class="primary" id="confirmOrder" style="display:none">Place Order</button>
+        <button class="primary" id="viewMenuBtn">View Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Countdown modal -->
   <div class="overlay" id="countdownOverlay">
     <div class="modal" role="dialog" aria-modal="true">
       <h3 id="countdownTitle">Booking Confirmed!</h3>
@@ -192,12 +256,25 @@
       </div>
 
       <div style="display:flex;gap:8px;justify-content:center;margin-top:20px">
+        <button class="btn" id="minimizeCountdown">Minimize</button>
         <button class="btn" id="cancelCountdown">Cancel Booking</button>
+        <button class="primary" id="orderFoodBtn" disabled>Order Food Now</button>
       </div>
     </div>
   </div>
 
-  <!-- Booking Ready Modal -->
+  <!-- Minimized Countdown -->
+  <div id="minimizedCountdown" class="countdown-minimized" style="display:none">
+    <div class="minimized-header">
+      <strong id="minimizedTitle">Table Ready In</strong>
+      <button class="btn" onclick="closeMinimizedCountdown()" style="padding:4px 8px;font-size:12px">×</button>
+    </div>
+    <div class="minimized-time" id="minimizedTime">05:00</div>
+    <div class="minimized-restaurant" id="minimizedRestaurant"></div>
+    <button class="primary" onclick="restoreCountdown()" style="width:100%;margin-top:8px;padding:8px">View Full</button>
+  </div>
+
+  <!-- Booking Ready modal -->
   <div class="overlay" id="readyOverlay">
     <div class="modal" role="dialog" aria-modal="true">
       <div class="booking-ready">
@@ -208,33 +285,49 @@
           <strong id="readyRestaurant">Restaurant Name</strong>
           <div style="color:var(--muted);font-size:13px;margin-top:4px" id="readyTime">Ready now</div>
         </div>
-        <button class="primary" id="closeReadyModal">Got it!</button>
+        <button class="primary" id="closeReadymodal">Got it!</button>
       </div>
     </div>
   </div>
 
-  <!-- Reviews Modal -->
+  <!-- Order Confirmation modal -->
+  <div class="overlay" id="orderConfirmationOverlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="booking-ready">
+        <div class="ready-icon pulse">🍽️</div>
+        <h3 id="orderConfirmationTitle">Order Placed!</h3>
+        <p id="orderConfirmationMessage" style="color:var(--muted);margin:16px 0">Your food will arrive shortly. The kitchen has received your order.</p>
+        <div style="background:rgba(0,194,168,0.1);padding:12px;border-radius:8px;margin:16px 0">
+          <strong id="orderRestaurantName">Restaurant Name</strong>
+          <div style="color:var(--muted);font-size:13px;margin-top:4px" id="orderEstimatedTime">Estimated preparation time: 15-20 minutes</div>
+        </div>
+        <button class="primary" id="closeOrderConfirmation">Great, thanks!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviews modal -->
   <div class="overlay" id="reviewsOverlay">
     <div class="modal" role="dialog" aria-modal="true">
-      <h3 id="reviewsModalTitle">Verified Reviews</h3>
-      <p id="reviewsModalMeta" style="color:var(--muted)"></p>
+      <h3 id="reviewsmodalTitle">Verified Reviews</h3>
+      <p id="reviewsmodalMeta" style="color:var(--muted)"></p>
       
       <div id="reviewsContent" style="margin-top:16px">
         <!-- Reviews will be populated here -->
       </div>
 
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-        <button class="btn" id="closeReviewsModal">Close</button>
+        <button class="btn" id="closeReviewsmodal">Close</button>
         <button class="primary" onclick="openBooking(selectedRestaurant.id, 'guarantee')">Book Now</button>
       </div>
     </div>
   </div>
 
-  <!-- Premium Modal -->
+  <!-- Premium modal -->
   <div class="overlay" id="premiumOverlay">
     <div class="modal" role="dialog" aria-modal="true">
-      <h3 id="premiumModalTitle">Go Premium</h3>
-      <p id="premiumModalSubtitle" style="color:var(--muted)">Unlock exclusive features for international travelers</p>
+      <h3 id="premiummodalTitle">Go Premium</h3>
+      <p id="premiummodalSubtitle" style="color:var(--muted)">Unlock exclusive features for international travelers</p>
 
       <div style="margin:20px 0">
         <div class="premium-feature">
@@ -273,14 +366,14 @@
       </div>
 
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-        <button class="btn" id="closePremiumModal">Cancel</button>
+        <button class="btn" id="closePremiummodal">Cancel</button>
         <button class="primary" id="confirmPremium">Subscribe Now</button>
       </div>
     </div>
   </div>
 
   <script>
-    // Enhanced restaurant dataset with multilingual content and images
+    // Enhanced restaurant dataset with multilingual content, images, menus, and cancellation policies
     const restaurants = [
       {
         id:1,
@@ -292,10 +385,46 @@
         features:["verified","skipQueue","multilingual","offline"],
         price:20,
         image:"https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=150&h=150&fit=crop",
+        hasCancellationFee: false,
         desc: {
           en: "Beloved local noodle spot with translated menu and authentic flavors.",
           es: "Lugar local de fideos favorito con menú traducido y sabores auténticos.",
           ch: "备受喜爱的当地面馆，提供翻译菜单和正宗风味。"
+        },
+        menu: {
+          en: {
+            "Noodles": [
+              {name: "Hand-pulled Noodles", description: "Freshly made noodles with beef broth", price: 12},
+              {name: "Dan Dan Noodles", description: "Spicy Sichuan noodles with minced pork", price: 10},
+              {name: "Beef Noodle Soup", description: "Traditional Taiwanese beef noodle soup", price: 14}
+            ],
+            "Dumplings": [
+              {name: "Pork Dumplings", description: "Steamed dumplings with ginger soy", price: 8},
+              {name: "Vegetable Dumplings", description: "Steamed vegetable dumplings", price: 7}
+            ]
+          },
+          es: {
+            "Fideos": [
+              {name: "Fideos Estirados a Mano", description: "Fideos recién hechos con caldo de res", price: 12},
+              {name: "Fideos Dan Dan", description: "Fideos picantes de Sichuan con cerdo picado", price: 10},
+              {name: "Sopa de Fideos con Res", description: "Sopa tradicional taiwanesa de fideos con res", price: 14}
+            ],
+            "Empanadillas": [
+              {name: "Empanadillas de Cerdo", description: "Empanadillas al vapor con jengibre y soja", price: 8},
+              {name: "Empanadillas de Verduras", description: "Empanadillas de verduras al vapor", price: 7}
+            ]
+          },
+          ch: {
+            "面条": [
+              {name: "手拉面", description: "新鲜制作的面条配牛肉汤", price: 12},
+              {name: "担担面", description: "四川辣面配肉末", price: 10},
+              {name: "牛肉面", description: "传统台湾牛肉面", price: 14}
+            ],
+            "饺子": [
+              {name: "猪肉饺子", description: "蒸饺配姜汁酱油", price: 8},
+              {name: "蔬菜饺子", description: "蒸蔬菜饺子", price: 7}
+            ]
+          }
         },
         reviews: {
           en: [
@@ -325,10 +454,46 @@
         features:["verified","multilingual","group"],
         price:12,
         image:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=150&h=150&fit=crop",
+        hasCancellationFee: false,
         desc: {
           en: "Top ramen with authentic taste. Group bookings available with multilingual staff.",
           es: "Ramen superior con sabor auténtico. Reservas grupales disponibles con personal multilingüe.",
           ch: "顶级拉面，口味正宗。提供团体预订和多语言员工服务。"
+        },
+        menu: {
+          en: {
+            "Ramen": [
+              {name: "Tonkotsu Ramen", description: "Rich pork bone broth with chashu", price: 13},
+              {name: "Shoyu Ramen", description: "Soy sauce based broth with chicken", price: 11},
+              {name: "Miso Ramen", description: "Miso flavored broth with corn", price: 12}
+            ],
+            "Sides": [
+              {name: "Gyoza", description: "Pan-fried pork dumplings", price: 6},
+              {name: "Karaage", description: "Japanese fried chicken", price: 7}
+            ]
+          },
+          es: {
+            "Ramen": [
+              {name: "Ramen Tonkotsu", description: "Caldo rico de hueso de cerdo con chashu", price: 13},
+              {name: "Ramen Shoyu", description: "Caldo base de salsa de soja con pollo", price: 11},
+              {name: "Ramen Miso", description: "Caldo con sabor a miso con maíz", price: 12}
+            ],
+            "Acompañamientos": [
+              {name: "Gyoza", description: "Empanadillas de cerdo fritas", price: 6},
+              {name: "Karaage", description: "Pollo frito japonés", price: 7}
+            ]
+          },
+          ch: {
+            "拉面": [
+              {name: "豚骨拉面", description: "浓郁的猪骨汤配叉烧", price: 13},
+              {name: "酱油拉面", description: "酱油汤底配鸡肉", price: 11},
+              {name: "味噌拉面", description: "味噌风味汤底配玉米", price: 12}
+            ],
+            "小吃": [
+              {name: "饺子", description: "煎猪肉饺子", price: 6},
+              {name: "炸鸡", description: "日式炸鸡", price: 7}
+            ]
+          }
         },
         reviews: {
           en: [
@@ -355,13 +520,65 @@
         rating:4.3,
         sourceRatings:[4.2,4.4],
         wait:10,
-        features:["premium","verified","multilingual"],
+        features:["premium","verified","multilingual","cancellationFee"],
         price:45,
         image:"https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=150&h=150&fit=crop",
+        hasCancellationFee: true, // Only this restaurant has cancellation fee
+        cancellationFee: 25,
         desc: {
           en: "Known for escargot and romantic ambiance. Premium booking available with multilingual service.",
           es: "Conocido por sus caracoles y ambiente romántico. Reserva premium disponible con servicio multilingüe.",
           ch: "以蜗牛和浪漫氛围闻名。提供高级预订和多语言服务。"
+        },
+        menu: {
+          en: {
+            "Appetizers": [
+              {name: "Escargot", description: "Snails in garlic herb butter", price: 18},
+              {name: "Foie Gras", description: "Duck liver pâté with toast", price: 22},
+              {name: "French Onion Soup", description: "Traditional onion soup with cheese", price: 12}
+            ],
+            "Main Courses": [
+              {name: "Duck Confit", description: "Slow-cooked duck with potatoes", price: 28},
+              {name: "Beef Bourguignon", description: "Beef stew in red wine sauce", price: 32},
+              {name: "Coq au Vin", description: "Chicken in wine sauce", price: 26}
+            ],
+            "Desserts": [
+              {name: "Crème Brûlée", description: "Vanilla custard with caramelized sugar", price: 9},
+              {name: "Chocolate Soufflé", description: "Warm chocolate dessert", price: 11}
+            ]
+          },
+          es: {
+            "Entrantes": [
+              {name: "Caracoles", description: "Caracoles en mantequilla de ajo y hierbas", price: 18},
+              {name: "Foie Gras", description: "Paté de hígado de pato con tostadas", price: 22},
+              {name: "Sopa de Cebolla", description: "Sopa tradicional de cebolla con queso", price: 12}
+            ],
+            "Platos Principales": [
+              {name: "Confit de Pato", description: "Pato cocido lentamente con patatas", price: 28},
+              {name: "Boeuf Bourguignon", description: "Estofado de res en salsa de vino tinto", price: 32},
+              {name: "Coq au Vin", description: "Pollo en salsa de vino", price: 26}
+            ],
+            "Postres": [
+              {name: "Crème Brûlée", description: "Natilla de vainilla con azúcar caramelizado", price: 9},
+              {name: "Suflé de Chocolate", description: "Postre caliente de chocolate", price: 11}
+            ]
+          },
+          ch: {
+            "开胃菜": [
+              {name: "法式蜗牛", description: "大蒜香草黄油蜗牛", price: 18},
+              {name: "鹅肝", description: "鸭肝酱配吐司", price: 22},
+              {name: "法式洋葱汤", description: "传统洋葱汤配奶酪", price: 12}
+            ],
+            "主菜": [
+              {name: "油封鸭", description: "慢煮鸭配土豆", price: 28},
+              {name: "勃艮第牛肉", description: "红酒炖牛肉", price: 32},
+              {name: "红酒烩鸡", description: "葡萄酒酱鸡肉", price: 26}
+            ],
+            "甜点": [
+              {name: "焦糖布丁", description: "香草蛋奶配焦糖", price: 9},
+              {name: "巧克力舒芙蕾", description: "热巧克力甜点", price: 11}
+            ]
+          }
         },
         reviews: {
           en: [
@@ -391,10 +608,46 @@
         features:["verified","skipQueue","group","offline"],
         price:30,
         image:"https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=150&h=150&fit=crop",
+        hasCancellationFee: false,
         desc: {
           en: "Great atmosphere and authentic tapas. Offline maps available for easy navigation.",
           es: "Excelente ambiente y tapas auténticas. Mapas sin conexión disponibles para navegación fácil.",
           ch: "氛围很棒，提供正宗塔帕斯。提供离线地图便于导航。"
+        },
+        menu: {
+          en: {
+            "Tapas": [
+              {name: "Patatas Bravas", description: "Fried potatoes with spicy sauce", price: 8},
+              {name: "Gambas al Ajillo", description: "Garlic shrimp", price: 12},
+              {name: "Tortilla Española", description: "Spanish omelette with potatoes", price: 9}
+            ],
+            "Paella": [
+              {name: "Paella Valenciana", description: "Traditional rice with seafood and chicken", price: 18},
+              {name: "Paella de Mariscos", description: "Seafood paella", price: 20}
+            ]
+          },
+          es: {
+            "Tapas": [
+              {name: "Patatas Bravas", description: "Patatas fritas con salsa picante", price: 8},
+              {name: "Gambas al Ajillo", description: "Gambas al ajillo", price: 12},
+              {name: "Tortilla Española", description: "Tortilla de patatas española", price: 9}
+            ],
+            "Paella": [
+              {name: "Paella Valenciana", description: "Arroz tradicional con mariscos y pollo", price: 18},
+              {name: "Paella de Mariscos", description: "Paella de mariscos", price: 20}
+            ]
+          },
+          ch: {
+            "塔帕斯": [
+              {name: "勇敢土豆", description: "炸土豆配辣酱", price: 8},
+              {name: "蒜香虾", description: "大蒜虾", price: 12},
+              {name: "西班牙蛋饼", description: "西班牙土豆蛋饼", price: 9}
+            ],
+            "海鲜饭": [
+              {name: "瓦伦西亚海鲜饭", description: "传统米饭配海鲜和鸡肉", price: 18},
+              {name: "海鲜饭", description: "海鲜饭", price: 20}
+            ]
+          }
         },
         reviews: {
           en: [
@@ -424,10 +677,43 @@
         features:[],
         price:18,
         image:"https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=150&h=150&fit=crop",
+        hasCancellationFee: false,
         desc: {
           en: "Large portions, casual dining with extensive menu options.",
           es: "Porciones grandes, comida casual con extensas opciones de menú.",
           ch: "份量大，休闲餐饮，菜单选择丰富。"
+        },
+        menu: {
+          en: {
+            "Burgers": [
+              {name: "Classic Burger", description: "Beef patty with lettuce and tomato", price: 14},
+              {name: "BBQ Bacon Burger", description: "Burger with bacon and BBQ sauce", price: 16}
+            ],
+            "Desserts": [
+              {name: "Original Cheesecake", description: "Classic New York cheesecake", price: 8},
+              {name: "Chocolate Cake", description: "Rich chocolate layer cake", price: 7}
+            ]
+          },
+          es: {
+            "Hamburguesas": [
+              {name: "Hamburguesa Clásica", description: "Hamburguesa de res con lechuga y tomate", price: 14},
+              {name: "Hamburguesa BBQ con Bacon", description: "Hamburguesa con bacon y salsa BBQ", price: 16}
+            ],
+            "Postres": [
+              {name: "Tarta de Queso Original", description: "Tarta de queso clásica de Nueva York", price: 8},
+              {name: "Tarta de Chocolate", description: "Tarta de chocolate intenso", price: 7}
+            ]
+          },
+          ch: {
+            "汉堡": [
+              {name: "经典汉堡", description: "牛肉饼配生菜和番茄", price: 14},
+              {name: "烧烤培根汉堡", description: "汉堡配培根和烧烤酱", price: 16}
+            ],
+            "甜点": [
+              {name: "原味芝士蛋糕", description: "经典纽约芝士蛋糕", price: 8},
+              {name: "巧克力蛋糕", description: "浓郁巧克力分层蛋糕", price: 7}
+            ]
+          }
         }
       },
       {
@@ -440,10 +726,43 @@
         features:["verified","offline","multilingual"],
         price:15,
         image:"https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=150&h=150&fit=crop",
+        hasCancellationFee: false,
         desc: {
           en: "Authentic German street food. Offline navigation available with multilingual menus.",
           es: "Comida callejera alemana auténtica. Navegación sin conexión disponible con menús multilingües.",
           ch: "正宗德国街头美食。提供离线导航和多语言菜单。"
+        },
+        menu: {
+          en: {
+            "Sausages": [
+              {name: "Currywurst", description: "German sausage with curry ketchup", price: 9},
+              {name: "Bratwurst", description: "Grilled German sausage", price: 8}
+            ],
+            "Sides": [
+              {name: "French Fries", description: "Crispy fries with seasoning", price: 4},
+              {name: "Potato Salad", description: "Traditional German potato salad", price: 5}
+            ]
+          },
+          es: {
+            "Salchichas": [
+              {name: "Currywurst", description: "Salchicha alemana con kétchup de curry", price: 9},
+              {name: "Bratwurst", description: "Salchicha alemana a la parrilla", price: 8}
+            ],
+            "Acompañamientos": [
+              {name: "Patatas Fritas", description: "Patatas fritas crujientes con condimentos", price: 4},
+              {name: "Ensalada de Patatas", description: "Ensalada de patatas alemana tradicional", price: 5}
+            ]
+          },
+          ch: {
+            "香肠": [
+              {name: "咖喱香肠", description: "德式香肠配咖喱番茄酱", price: 9},
+              {name: "烤肠", description: "烤德式香肠", price: 8}
+            ],
+            "配菜": [
+              {name: "薯条", description: "脆薯条配调味料", price: 4},
+              {name: "土豆沙拉", description: "传统德式土豆沙拉", price: 5}
+            ]
+          }
         },
         reviews: {
           en: [
@@ -472,33 +791,32 @@
     const bookingOverlay = document.getElementById('bookingOverlay');
     const countdownOverlay = document.getElementById('countdownOverlay');
     const readyOverlay = document.getElementById('readyOverlay');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const orderConfirmationOverlay = document.getElementById('orderConfirmationOverlay');
     const reviewsOverlay = document.getElementById('reviewsOverlay');
     const premiumOverlay = document.getElementById('premiumOverlay');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalMeta = document.getElementById('modalMeta');
-    const countdownTitle = document.getElementById('countdownTitle');
-    const countdownSubtitle = document.getElementById('countdownSubtitle');
-    const countdownText = document.getElementById('countdownText');
-    const countdownTime = document.getElementById('countdownTime');
-    const restaurantInfo = document.getElementById('restaurantInfo');
-    const bookingDetails = document.getElementById('bookingDetails');
-    const readyTitle = document.getElementById('readyTitle');
-    const readyMessage = document.getElementById('readyMessage');
-    const readyRestaurant = document.getElementById('readyRestaurant');
-    const readyTime = document.getElementById('readyTime');
-    const reviewsModalTitle = document.getElementById('reviewsModalTitle');
-    const reviewsModalMeta = document.getElementById('reviewsModalMeta');
-    const reviewsContent = document.getElementById('reviewsContent');
-    const langToggle = document.getElementById('langToggle');
-    const subscribeBtn = document.getElementById('subscribeBtn');
+    const minimizedCountdown = document.getElementById('minimizedCountdown');
+    
+    // Form elements
+    const bookingDateTime = document.getElementById('bookingDateTime');
+    const cancellationFeeWarning = document.getElementById('cancellationFeeWarning');
     const groupBookingCheckbox = document.getElementById('groupBooking');
-
+    const orderFoodBtn = document.getElementById('orderFoodBtn');
+    
     let selectedRestaurant = null;
     let user = {premium:false};
     let activeFilters = new Set(['verified']);
     let currentLang = 'en';
     let countdownInterval = null;
     let remainingTime = 0;
+    let currentOrder = [];
+    let canOrderFood = false; // Flag to control when ordering is allowed
+
+    // Set min/max dates for booking
+    const today = new Date();
+    const nextYear = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+    bookingDateTime.min = today.toISOString().slice(0, 16);
+    bookingDateTime.max = nextYear.toISOString().slice(0, 16);
 
     // Complete website translations
     const translations = {
@@ -525,7 +843,7 @@
         
         // Main content
         trustedText: "Trusted by International Travelers",
-        heroTitle: "Find & Book Restaurants Globally — No Language Barriers",
+        heroTitle: "Find & Book Restaurants Globally",
         heroSubtitle: "Real-time queue tracking • Verified multilingual reviews • Guaranteed reservations • Offline maps",
         userTypeText: "Simulated user",
         userDetails: "Traveler — 2 trips / year",
@@ -536,6 +854,7 @@
         viewReviews: "Reviews",
         joinQueue: "Join",
         bookNow: "Book Now",
+        viewMenu: "View Menu",
         
         // Booking modal
         bookTable: "Book Table",
@@ -592,7 +911,22 @@
         groupNotification: "Group booking notification sent to restaurant.",
         offlineAvailable: "Offline map available for navigation.",
         enjoyMeal: "Enjoy your meal!",
-        noReviews: "No verified reviews yet for this restaurant."
+        noReviews: "No verified reviews yet for this restaurant.",
+        
+        // New menu translations
+        menu: "Menu",
+        orderPlaced: "Order Placed!",
+        orderConfirmationMessage: "Your food will arrive shortly. The kitchen has received your order.",
+        estimatedPreparation: "Estimated preparation time: 15-20 minutes",
+        yourOrder: "Your Order",
+        total: "Total:",
+        placeOrder: "Place Order",
+        viewMenu: "View Menu",
+        minimize: "Minimize",
+        orderFoodNow: "Order Food Now",
+        tableReadyIn: "Table Ready In",
+        viewFull: "View Full",
+        orderNotAvailable: "Ordering available when table is ready"
       },
       es: {
         // Header
@@ -628,6 +962,7 @@
         viewReviews: "Reseñas",
         joinQueue: "Unirse",
         bookNow: "Reservar Ahora",
+        viewMenu: "Ver Menú",
         
         // Booking modal
         bookTable: "Reservar Mesa",
@@ -684,7 +1019,22 @@
         groupNotification: "Notificación de reserva grupal enviada al restaurante.",
         offlineAvailable: "Mapa sin conexión disponible para navegación.",
         enjoyMeal: "¡Disfruta tu comida!",
-        noReviews: "Aún no hay reseñas verificadas para este restaurante."
+        noReviews: "Aún no hay reseñas verificadas para este restaurante.",
+        
+        // New menu translations
+        menu: "Menú",
+        orderPlaced: "¡Pedido Realizado!",
+        orderConfirmationMessage: "Tu comida llegará pronto. La cocina ha recibido tu pedido.",
+        estimatedPreparation: "Tiempo estimado de preparación: 15-20 minutos",
+        yourOrder: "Tu Pedido",
+        total: "Total:",
+        placeOrder: "Realizar Pedido",
+        viewMenu: "Ver Menú",
+        minimize: "Minimizar",
+        orderFoodNow: "Pedir Comida Ahora",
+        tableReadyIn: "Mesa Lista En",
+        viewFull: "Ver Completo",
+        orderNotAvailable: "Pedido disponible cuando la mesa esté lista"
       },
       ch: {
         // Header
@@ -720,6 +1070,7 @@
         viewReviews: "评价",
         joinQueue: "加入",
         bookNow: "立即预订",
+        viewMenu: "查看菜单",
         
         // Booking modal
         bookTable: "预订餐桌",
@@ -776,7 +1127,22 @@
         groupNotification: "团体预订通知已发送至餐厅。",
         offlineAvailable: "离线地图可用于导航。",
         enjoyMeal: "祝您用餐愉快！",
-        noReviews: "此餐厅尚无已验证评价。"
+        noReviews: "此餐厅尚无已验证评价。",
+        
+        // New menu translations
+        menu: "菜单",
+        orderPlaced: "订单已提交！",
+        orderConfirmationMessage: "您的食物很快送达。厨房已收到您的订单。",
+        estimatedPreparation: "预计准备时间：15-20分钟",
+        yourOrder: "您的订单",
+        total: "总计：",
+        placeOrder: "提交订单",
+        viewMenu: "查看菜单",
+        minimize: "最小化",
+        orderFoodNow: "立即点餐",
+        tableReadyIn: "餐桌准备时间",
+        viewFull: "查看完整",
+        orderNotAvailable: "餐桌准备好后可点餐"
       }
     };
 
@@ -827,7 +1193,7 @@
       updateRestaurantDescriptions();
       
       // Update modals if they're open
-      updateModalsLanguage(t);
+      updatemodalsLanguage(t);
     }
 
     function updateRestaurantCardsLanguage(t) {
@@ -851,6 +1217,9 @@
         if (btn.textContent === 'Book Now' || btn.textContent === 'Reservar Ahora' || btn.textContent === '立即预订') {
           btn.textContent = t.bookNow;
         }
+        if (btn.textContent === 'View Menu' || btn.textContent === 'Ver Menú' || btn.textContent === '查看菜单') {
+          btn.textContent = t.viewMenu;
+        }
       });
     }
 
@@ -872,7 +1241,7 @@
       });
     }
 
-    function updateModalsLanguage(t) {
+    function updatemodalsLanguage(t) {
       // Booking modal
       if (bookingOverlay.style.display === 'flex') {
         document.getElementById('modalTitle').textContent = t.bookTable;
@@ -881,7 +1250,7 @@
         document.getElementById('standardPlanTitle').textContent = t.standardPlanTitle;
         document.getElementById('standardPlanDesc').textContent = t.standardPlanDesc;
         document.getElementById('groupBookingText').textContent = t.groupBookingText;
-        document.getElementById('closeBookingModal').textContent = t.cancelBtn;
+        document.getElementById('closeBookingmodal').textContent = t.cancelBtn;
         document.getElementById('confirmBooking').textContent = t.confirmBooking;
       }
       
@@ -891,6 +1260,8 @@
         document.getElementById('countdownSubtitle').textContent = t.countdownSubtitle;
         document.getElementById('countdownText').textContent = t.countdownText;
         document.getElementById('cancelCountdown').textContent = t.cancelBooking;
+        document.getElementById('minimizeCountdown').textContent = t.minimize;
+        document.getElementById('orderFoodBtn').textContent = canOrderFood ? t.orderFoodNow : t.orderNotAvailable;
       }
       
       // Ready modal
@@ -898,13 +1269,13 @@
         document.getElementById('readyTitle').textContent = t.readyTitle;
         document.getElementById('readyMessage').textContent = t.readyMessage;
         document.getElementById('readyTime').textContent = t.readyTime;
-        document.getElementById('closeReadyModal').textContent = t.gotIt;
+        document.getElementById('closeReadymodal').textContent = t.gotIt;
       }
       
       // Reviews modal
       if (reviewsOverlay.style.display === 'flex') {
-        document.getElementById('reviewsModalTitle').textContent = t.verifiedReviews;
-        document.getElementById('closeReviewsModal').textContent = t.closeBtn;
+        document.getElementById('reviewsmodalTitle').textContent = t.verifiedReviews;
+        document.getElementById('closeReviewsmodal').textContent = t.closeBtn;
         const bookBtn = reviewsOverlay.querySelector('.primary');
         bookBtn.textContent = t.bookNow;
         
@@ -916,8 +1287,8 @@
       
       // Premium modal
       if (premiumOverlay.style.display === 'flex') {
-        document.getElementById('premiumModalTitle').textContent = t.goPremium;
-        document.getElementById('premiumModalSubtitle').textContent = t.premiumSubtitle;
+        document.getElementById('premiummodalTitle').textContent = t.goPremium;
+        document.getElementById('premiummodalSubtitle').textContent = t.premiumSubtitle;
         document.getElementById('feature1Title').textContent = t.feature1Title;
         document.getElementById('feature1Desc').textContent = t.feature1Desc;
         document.getElementById('feature2Title').textContent = t.feature2Title;
@@ -928,9 +1299,192 @@
         document.getElementById('feature4Desc').textContent = t.feature4Desc;
         document.getElementById('premiumPrice').innerHTML = t.premiumPrice + '<span style="font-size:14px;color:var(--muted)">/month</span>';
         document.getElementById('premiumAlternative').textContent = t.premiumAlternative;
-        document.getElementById('closePremiumModal').textContent = t.cancelBtn;
+        document.getElementById('closePremiummodal').textContent = t.cancelBtn;
         document.getElementById('confirmPremium').textContent = t.subscribeNow;
       }
+      
+      // Menu modal
+      if (menuOverlay.style.display === 'flex') {
+        document.getElementById('menumodalTitle').textContent = `${t.menu} — ${selectedRestaurant.name}`;
+        document.getElementById('viewMenuBtn').textContent = t.viewMenu;
+        document.getElementById('confirmOrder').textContent = t.placeOrder;
+        document.getElementById('closeMenumodal').textContent = t.closeBtn;
+        document.getElementById('orderSummaryTitle').textContent = t.yourOrder;
+        document.getElementById('totalText').textContent = t.total;
+      }
+      
+      // Order confirmation modal
+      if (orderConfirmationOverlay.style.display === 'flex') {
+        document.getElementById('orderConfirmationTitle').textContent = t.orderPlaced;
+        document.getElementById('orderConfirmationMessage').textContent = t.orderConfirmationMessage;
+        document.getElementById('orderEstimatedTime').textContent = t.estimatedPreparation;
+        document.getElementById('closeOrderConfirmation').textContent = t.gotIt;
+      }
+      
+      // Minimized countdown
+      if (minimizedCountdown.style.display === 'block') {
+        document.getElementById('minimizedTitle').textContent = t.tableReadyIn;
+        document.querySelector('#minimizedCountdown .primary').textContent = t.viewFull;
+      }
+    }
+
+    // NEW FUNCTIONS FOR ENHANCED FEATURES
+
+    function showMenu(restaurantId) {
+      const restaurant = restaurants.find(r => r.id === restaurantId);
+      selectedRestaurant = restaurant;
+      
+      const t = translations[currentLang];
+      document.getElementById('menumodalTitle').textContent = `${t.menu} — ${restaurant.name}`;
+      document.getElementById('menumodalMeta').textContent = `${restaurant.cuisine}`;
+      
+      const menuContent = document.getElementById('menuContent');
+      const menu = restaurant.menu[currentLang] || restaurant.menu.en;
+      
+      let menuHTML = '';
+      for (const [category, items] of Object.entries(menu)) {
+        menuHTML += `
+          <div class="menu-category">
+            <h4>${category}</h4>
+            ${items.map(item => `
+              <div class="menu-item" onclick="addToOrder('${item.name}', ${item.price})">
+                <div>
+                  <strong>${item.name}</strong>
+                  <div style="color:var(--muted);font-size:13px;margin-top:4px">${item.description}</div>
+                </div>
+                <div class="menu-item-price">$${item.price}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+      
+      menuContent.innerHTML = menuHTML;
+      menuOverlay.style.display = 'flex';
+      currentOrder = []; // Reset order
+      updateOrderSummary();
+    }
+
+    function addToOrder(itemName, price) {
+      const existingItem = currentOrder.find(item => item.name === itemName);
+      
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        currentOrder.push({
+          name: itemName,
+          price: price,
+          quantity: 1
+        });
+      }
+      
+      updateOrderSummary();
+    }
+
+    function updateOrderSummary() {
+      const orderSummary = document.getElementById('orderSummary');
+      const orderItems = document.getElementById('orderItems');
+      const orderTotal = document.getElementById('orderTotal');
+      const confirmOrderBtn = document.getElementById('confirmOrder');
+      const viewMenuBtn = document.getElementById('viewMenuBtn');
+      const t = translations[currentLang];
+      
+      if (currentOrder.length > 0) {
+        orderSummary.style.display = 'block';
+        confirmOrderBtn.style.display = 'block';
+        viewMenuBtn.style.display = 'none';
+        document.getElementById('orderSummaryTitle').textContent = t.yourOrder;
+        document.getElementById('totalText').textContent = t.total;
+        confirmOrderBtn.textContent = t.placeOrder;
+        
+        let total = 0;
+        orderItems.innerHTML = currentOrder.map(item => {
+          total += item.price * item.quantity;
+          return `
+            <div class="order-item">
+              <div>
+                <strong>${item.name}</strong>
+                <div style="color:var(--muted);font-size:12px">$${item.price} each</div>
+              </div>
+              <div class="quantity-controls">
+                <button class="quantity-btn" onclick="decreaseQuantity('${item.name}')">-</button>
+                <span style="margin:0 8px">${item.quantity}</span>
+                <button class="quantity-btn" onclick="increaseQuantity('${item.name}')">+</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        orderTotal.textContent = `$${total.toFixed(2)}`;
+      } else {
+        orderSummary.style.display = 'none';
+        confirmOrderBtn.style.display = 'none';
+        viewMenuBtn.style.display = 'block';
+        viewMenuBtn.textContent = t.viewMenu;
+      }
+    }
+
+    function increaseQuantity(itemName) {
+      const item = currentOrder.find(item => item.name === itemName);
+      if (item) {
+        item.quantity += 1;
+        updateOrderSummary();
+      }
+    }
+
+    function decreaseQuantity(itemName) {
+      const itemIndex = currentOrder.findIndex(item => item.name === itemName);
+      if (itemIndex !== -1) {
+        if (currentOrder[itemIndex].quantity > 1) {
+          currentOrder[itemIndex].quantity -= 1;
+        } else {
+          currentOrder.splice(itemIndex, 1);
+        }
+        updateOrderSummary();
+      }
+    }
+
+    function placeOrder() {
+      const t = translations[currentLang];
+      document.getElementById('orderConfirmationTitle').textContent = t.orderPlaced;
+      document.getElementById('orderConfirmationMessage').textContent = t.orderConfirmationMessage;
+      document.getElementById('orderRestaurantName').textContent = selectedRestaurant.name;
+      document.getElementById('orderEstimatedTime').textContent = t.estimatedPreparation;
+      document.getElementById('closeOrderConfirmation').textContent = t.gotIt;
+      
+      menuOverlay.style.display = 'none';
+      orderConfirmationOverlay.style.display = 'flex';
+      currentOrder = []; // Clear order after placing
+    }
+
+    function minimizeCountdown() {
+      const t = translations[currentLang];
+      countdownOverlay.style.display = 'none';
+      minimizedCountdown.style.display = 'block';
+      document.getElementById('minimizedTitle').textContent = t.tableReadyIn;
+      document.getElementById('minimizeCountdown').textContent = t.minimize;
+      document.getElementById('orderFoodBtn').textContent = canOrderFood ? t.orderFoodNow : t.orderNotAvailable;
+      updateMinimizedCountdown();
+    }
+
+    function closeMinimizedCountdown() {
+      minimizedCountdown.style.display = 'none';
+      clearInterval(countdownInterval);
+    }
+
+    function restoreCountdown() {
+      const t = translations[currentLang];
+      minimizedCountdown.style.display = 'none';
+      countdownOverlay.style.display = 'flex';
+      document.querySelector('#minimizedCountdown .primary').textContent = t.viewFull;
+    }
+
+    function updateMinimizedCountdown() {
+      const minutes = Math.floor(remainingTime / 60);
+      const seconds = remainingTime % 60;
+      const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      document.getElementById('minimizedTime').textContent = timeString;
+      document.getElementById('minimizedRestaurant').textContent = selectedRestaurant.name;
     }
 
     function startCountdown(restaurant, isPremium, isGroup) {
@@ -954,6 +1508,12 @@
         `Premium Booking • ${isGroup ? 'Group' : 'Individual'}` : 
         `Standard Queue • ${isGroup ? 'Group' : 'Individual'}`;
       
+      // Disable ordering until countdown is complete
+      canOrderFood = false;
+      document.getElementById('orderFoodBtn').disabled = true;
+      document.getElementById('orderFoodBtn').textContent = t.orderNotAvailable;
+      document.getElementById('orderFoodBtn').classList.add('btn-disabled');
+      
       // Show countdown modal
       bookingOverlay.style.display = 'none';
       countdownOverlay.style.display = 'flex';
@@ -966,10 +1526,16 @@
     function updateCountdown() {
       remainingTime--;
       updateCountdownDisplay();
+      updateMinimizedCountdown();
       
       if (remainingTime <= 0) {
         clearInterval(countdownInterval);
-        showReadyModal();
+        // Enable ordering when countdown is complete
+        canOrderFood = true;
+        document.getElementById('orderFoodBtn').disabled = false;
+        document.getElementById('orderFoodBtn').textContent = translations[currentLang].orderFoodNow;
+        document.getElementById('orderFoodBtn').classList.remove('btn-disabled');
+        showReadymodal();
       }
     }
 
@@ -980,22 +1546,24 @@
       document.getElementById('countdownTime').textContent = timeString;
     }
 
-    function showReadyModal() {
+    function showReadymodal() {
       const t = translations[currentLang];
       
       document.getElementById('readyTitle').textContent = t.readyTitle;
       document.getElementById('readyMessage').textContent = t.readyMessage;
       document.getElementById('readyRestaurant').textContent = selectedRestaurant.name;
       document.getElementById('readyTime').textContent = t.readyTime;
-      document.getElementById('closeReadyModal').textContent = t.gotIt;
+      document.getElementById('closeReadymodal').textContent = t.gotIt;
       
       countdownOverlay.style.display = 'none';
+      minimizedCountdown.style.display = 'none';
       readyOverlay.style.display = 'flex';
     }
 
     function cancelCountdown() {
       clearInterval(countdownInterval);
       countdownOverlay.style.display = 'none';
+      minimizedCountdown.style.display = 'none';
       alert("Booking cancelled");
     }
 
@@ -1010,7 +1578,13 @@
             <div class="rname">${r.name}</div>
             <div class="meta">${r.cuisine} • ${r.price}\$ avg</div>
             <div style="margin-top:6px">
-              ${r.features.map(f => `<span class="feature-tag">${f}</span>`).join('')}
+              ${r.features.map(f => {
+                if (f === 'cancellationFee') {
+                  return `<span class="feature-tag cancellation">Cancellation Fee</span>`;
+                } else {
+                  return `<span class="feature-tag">${f}</span>`;
+                }
+              }).join('')}
             </div>
             <div style="margin-top:6px"><span class="badge">Wait: <span class="wait" id="wait-${r.id}">${r.wait}m</span></span></div>
           </div>
@@ -1042,13 +1616,20 @@
               <div class="meta">${r.cuisine} • ${r.price}$ avg</div>
               <div style="margin-top:8px;color:var(--muted);font-size:13px">${desc}</div>
               <div style="margin-top:8px">
-                ${r.features.map(f => `<span class="feature-tag">${f}</span>`).join('')}
+                ${r.features.map(f => {
+                  if (f === 'cancellationFee') {
+                    return `<span class="feature-tag cancellation">Cancellation Fee</span>`;
+                  } else {
+                    return `<span class="feature-tag">${f}</span>`;
+                  }
+                }).join('')}
               </div>
             </div>
             <div style="text-align:right">
               <div class="badge">Wait: <span class="wait" id="wait-card-${r.id}">${r.wait}m</span></div>
               <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
                 <button class="btn" onclick="viewReviews(${r.id})">${translations[currentLang].viewReviews}</button>
+                <button class="btn-secondary" onclick="showMenu(${r.id})">${translations[currentLang].viewMenu}</button>
                 <button class="primary" onclick="openBooking(${r.id},'guarantee')">${translations[currentLang].bookNow}</button>
               </div>
             </div>
@@ -1082,8 +1663,8 @@
       selectedRestaurant = r;
       
       if (!r.reviews) {
-        reviewsModalTitle.textContent = `${translations[currentLang].verifiedReviews} — ${r.name}`;
-        reviewsModalMeta.textContent = `${r.cuisine} • Rating: ${r.rating}/5`;
+        reviewsmodalTitle.textContent = `${translations[currentLang].verifiedReviews} — ${r.name}`;
+        reviewsmodalMeta.textContent = `${r.cuisine} • Rating: ${r.rating}/5`;
         reviewsContent.innerHTML = `<p>${translations[currentLang].noReviews}</p>`;
       } else {
         updateReviewsContent(r);
@@ -1094,8 +1675,8 @@
 
     function updateReviewsContent(restaurant) {
       const t = translations[currentLang];
-      reviewsModalTitle.textContent = `${t.verifiedReviews} — ${restaurant.name}`;
-      reviewsModalMeta.textContent = `${restaurant.cuisine} • Rating: ${restaurant.rating}/5 • Language: ${currentLang.toUpperCase()}`;
+      reviewsmodalTitle.textContent = `${t.verifiedReviews} — ${restaurant.name}`;
+      reviewsmodalMeta.textContent = `${restaurant.cuisine} • Rating: ${restaurant.rating}/5 • Language: ${currentLang.toUpperCase()}`;
       
       const reviews = restaurant.reviews[currentLang] || restaurant.reviews.en;
       const agg = Math.round((restaurant.sourceRatings.reduce((a,b)=>a+b,0)/restaurant.sourceRatings.length)*10)/10;
@@ -1144,12 +1725,22 @@
       reviewsContent.innerHTML = reviewsHTML;
     }
 
+    // Updated openBooking function to show cancellation fee and date picker
     function openBooking(id,mode){
       const r = restaurants.find(x=>x.id===id); selectedRestaurant=r;
       modalTitle.textContent = `${translations[currentLang].bookTable} — ${r.name}`;
       modalMeta.textContent = `${r.cuisine} • Avg $${r.price} • Current wait ${r.wait}m`;
       bookingOverlay.style.display='flex';
       groupBookingCheckbox.checked = false;
+
+      // Show cancellation fee warning if applicable
+      if (r.hasCancellationFee) {
+        cancellationFeeWarning.style.display = 'block';
+        const feeText = cancellationFeeWarning.querySelector('div');
+        feeText.textContent = `Cancellations within 2 hours incur a $${r.cancellationFee} fee`;
+      } else {
+        cancellationFeeWarning.style.display = 'none';
+      }
 
       // Reset and set default selection
       document.querySelectorAll('.plan').forEach(p => p.classList.remove('selected'));
@@ -1163,15 +1754,26 @@
       bookingOverlay.dataset.mode = mode;
     }
 
-    function openPremiumModal(){
+    function openPremiummodal(){
       premiumOverlay.style.display='flex';
     }
 
-    document.getElementById('closeBookingModal').addEventListener('click',()=>bookingOverlay.style.display='none');
-    document.getElementById('closeReviewsModal').addEventListener('click',()=>reviewsOverlay.style.display='none');
-    document.getElementById('closePremiumModal').addEventListener('click',()=>premiumOverlay.style.display='none');
-    document.getElementById('closeReadyModal').addEventListener('click',()=>readyOverlay.style.display='none');
+    // Event listeners
+    document.getElementById('closeBookingmodal').addEventListener('click',()=>bookingOverlay.style.display='none');
+    document.getElementById('closeReviewsmodal').addEventListener('click',()=>reviewsOverlay.style.display='none');
+    document.getElementById('closePremiummodal').addEventListener('click',()=>premiumOverlay.style.display='none');
+    document.getElementById('closeReadymodal').addEventListener('click',()=>readyOverlay.style.display='none');
     document.getElementById('cancelCountdown').addEventListener('click', cancelCountdown);
+    document.getElementById('minimizeCountdown').addEventListener('click', minimizeCountdown);
+    document.getElementById('orderFoodBtn').addEventListener('click', () => {
+      if (canOrderFood) {
+        showMenu(selectedRestaurant.id);
+      }
+    });
+    document.getElementById('confirmOrder').addEventListener('click', placeOrder);
+    document.getElementById('closeOrderConfirmation').addEventListener('click', () => orderConfirmationOverlay.style.display = 'none');
+    document.getElementById('viewMenuBtn').addEventListener('click', () => showMenu(selectedRestaurant.id));
+    document.getElementById('closeMenumodal').addEventListener('click', () => menuOverlay.style.display = 'none');
 
     document.getElementById('confirmBooking').addEventListener('click',()=>{
       const selectedPlan = document.querySelector('.plan.selected');
@@ -1283,7 +1885,7 @@
         alert(translations[currentLang].alreadyPremium); 
         return; 
       }
-      openPremiumModal();
+      openPremiummodal();
     });
 
     // initial render
@@ -1299,6 +1901,9 @@
         premiumOverlay.style.display='none';
         countdownOverlay.style.display='none';
         readyOverlay.style.display='none';
+        menuOverlay.style.display='none';
+        orderConfirmationOverlay.style.display='none';
+        minimizedCountdown.style.display='none';
       }
     });
 
